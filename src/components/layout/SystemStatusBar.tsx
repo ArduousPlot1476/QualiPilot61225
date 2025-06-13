@@ -1,5 +1,5 @@
 import React from 'react';
-import { Shield, AlertTriangle, CheckCircle, Clock, Menu, Wifi, WifiOff } from 'lucide-react';
+import { Bot, AlertTriangle, CheckCircle, Clock, Menu, Wifi, WifiOff } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { useSync } from '../../hooks/useSync';
 import { UserNavigation } from './UserNavigation';
@@ -30,7 +30,7 @@ export const SystemStatusBar: React.FC = () => {
           </button>
           
           <div className="flex items-center space-x-2">
-            <Shield className="h-6 w-6 text-blue-600 dark:text-blue-500" />
+            <Bot className="h-6 w-6 text-teal-600 dark:text-teal-500" />
             <span className="text-lg font-semibold text-gray-800 dark:text-gray-200">QualiPilot</span>
           </div>
         </div>
@@ -62,7 +62,7 @@ export const SystemStatusBar: React.FC = () => {
             >
               {criticalCount > 0 && (
                 <div className="flex items-center space-x-1 px-3 py-1 rounded-full bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 hover-lift transition-all-300">
-                  <Shield className="h-4 w-4 text-red-500 dark:text-red-400" />
+                  <Bot className="h-4 w-4 text-red-500 dark:text-red-400" />
                   <span className="text-sm font-medium text-red-700 dark:text-red-300">{criticalCount}</span>
                 </div>
               )}
