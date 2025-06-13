@@ -25,33 +25,33 @@ export const StreamingMessage: React.FC<StreamingMessageProps> = ({
       <div className="flex max-w-full">
         {/* Avatar */}
         <div className="mr-3">
-          <div className="bg-teal-600 rounded-full p-2 hover-scale transition-transform-150">
+          <div className="bg-teal-600 dark:bg-teal-700 rounded-full p-2 hover-scale transition-transform-150">
             <Bot className="h-4 w-4 text-white" />
           </div>
         </div>
 
         {/* Message Content */}
         <div className="space-y-3 max-w-full">
-          <div className="bg-white border border-slate-200 rounded-lg px-4 py-3 shadow-sm hover-lift transition-all-300">
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-lg px-4 py-3 shadow-sm hover-lift transition-all-300">
             <div className="message-content">
               <MarkdownRenderer content={content} />
               
               {/* Streaming indicator */}
               {isStreaming && (
-                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100">
+                <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-100 dark:border-slate-700">
                   <div className="flex items-center space-x-2">
                     <div className="flex space-x-1">
-                      <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse"></div>
-                      <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
-                      <div className="w-2 h-2 bg-teal-500 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
+                      <div className="w-2 h-2 bg-teal-500 dark:bg-teal-400 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-teal-500 dark:bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                      <div className="w-2 h-2 bg-teal-500 dark:bg-teal-400 rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
                     </div>
-                    <span className="text-xs text-slate-500">AI is responding...</span>
+                    <span className="text-xs text-slate-500 dark:text-slate-400">AI is responding...</span>
                   </div>
                   
                   {onStop && (
                     <button
                       onClick={onStop}
-                      className="flex items-center space-x-1 px-2 py-1 text-xs text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition-colors focus-ring"
+                      className="flex items-center space-x-1 px-2 py-1 text-xs text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 hover:bg-red-50 dark:hover:bg-red-900/20 rounded transition-colors focus-ring"
                       aria-label="Stop AI response"
                     >
                       <Square className="h-3 w-3" />
