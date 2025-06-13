@@ -241,8 +241,7 @@ export const useAppStore = create<AppState>((set, get) => ({
       alerts: [
         {
           ...alert,
-          id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date()
+          timestamp: alert.timestamp || new Date()
         },
         ...state.alerts
       ]
