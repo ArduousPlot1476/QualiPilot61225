@@ -45,7 +45,14 @@ if (isSupabaseConfigured) {
       select: () => Promise.reject(new Error('Supabase not configured')),
       update: () => Promise.reject(new Error('Supabase not configured')),
       delete: () => Promise.reject(new Error('Supabase not configured'))
-    })
+    }),
+    storage: {
+      from: () => ({
+        upload: () => Promise.reject(new Error('Supabase not configured')),
+        download: () => Promise.reject(new Error('Supabase not configured')),
+        getPublicUrl: () => ({ data: { publicUrl: '' } })
+      })
+    }
   };
 }
 
@@ -262,6 +269,22 @@ export const dbHelpers = {
       throw new Error('Supabase is not configured. Please add your Supabase credentials to the .env file.');
     }
 
+    // If updates contains company_info, merge it with existing company_info
+    if (updates.company_info) {
+      const { data: existingProfile } = await supabase
+        .from('users')
+        .select('company_info')
+        .eq('id', userId)
+        .single();
+      
+      if (existingProfile) {
+        updates.company_info = {
+          ...existingProfile.company_info,
+          ...updates.company_info
+        };
+      }
+    }
+
     const response = await supabase
       .from('users')
       .update(updates)
@@ -456,5 +479,53 @@ export const dbHelpers = {
       .eq('id', id);
 
     return handleSupabaseResponse(response);
+  },
+  
+  // File storage operations
+  uploadFile: async (bucket: string, path: string, file: File) => {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase is not configured. Please add your Supabase credentials to the .env file.');
+    }
+    
+    const { data, error } = await supabase.storage
+      .from(bucket)
+      .upload(path, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+      
+    if (error) {
+      throw new SupabaseError(error.message, error.code, error.details);
+    }
+    
+    return data;
+  },
+  
+  getFileUrl: (bucket: string, path: string) => {
+    if (!isSupabaseConfigured) {
+      return '';
+    }
+    
+    const { data } = supabase.storage
+      .from(bucket)
+      .getPublicUrl(path);
+      
+    return data.publicUrl;
+  },
+  
+  deleteFile: async (bucket: string, path: string) => {
+    if (!isSupabaseConfigured) {
+      throw new Error('Supabase is not configured. Please add your Supabase credentials to the .env file.');
+    }
+    
+    const { error } = await supabase.storage
+      .from(bucket)
+      .remove([path]);
+      
+    if (error) {
+      throw new SupabaseError(error.message, error.code, error.details);
+    }
+    
+    return true;
   }
 };

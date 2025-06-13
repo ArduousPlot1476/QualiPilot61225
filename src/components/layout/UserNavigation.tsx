@@ -1,4 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../auth/AuthProvider';
 import { User, Building, Settings, LogOut, ChevronDown, Shield, Moon, Sun } from 'lucide-react';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
@@ -9,6 +10,7 @@ export const UserNavigation: React.FC = () => {
   const [isDarkMode, setIsDarkMode] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const { user, userProfile, signOut } = useAuth();
+  const navigate = useNavigate();
 
   // Close dropdown when clicking outside
   useEffect(() => {
@@ -57,6 +59,11 @@ export const UserNavigation: React.FC = () => {
 
   const getCompanyName = () => {
     return userProfile?.company_info?.company_name || 'Your Company';
+  };
+
+  const navigateToProfile = () => {
+    setIsDropdownOpen(false);
+    navigate('/settings');
   };
 
   if (!user) {
@@ -128,10 +135,7 @@ export const UserNavigation: React.FC = () => {
           <div className="py-2">
             <FocusableElement
               className="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors duration-200"
-              onClick={() => {
-                setIsDropdownOpen(false);
-                // Navigate to profile
-              }}
+              onClick={navigateToProfile}
               role="menuitem"
             >
               <User className="h-4 w-4 mr-3 text-slate-500" />
@@ -142,7 +146,7 @@ export const UserNavigation: React.FC = () => {
               className="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors duration-200"
               onClick={() => {
                 setIsDropdownOpen(false);
-                // Navigate to company settings
+                navigate('/settings');
               }}
               role="menuitem"
             >
@@ -154,7 +158,7 @@ export const UserNavigation: React.FC = () => {
               className="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors duration-200"
               onClick={() => {
                 setIsDropdownOpen(false);
-                // Navigate to account management
+                navigate('/settings');
               }}
               role="menuitem"
             >

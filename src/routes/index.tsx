@@ -15,13 +15,14 @@ const ForgotPasswordPage = React.lazy(() => import('../components/auth/ForgotPas
 const ResetPasswordPage = React.lazy(() => import('../components/auth/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
 const SignupSuccessPage = React.lazy(() => import('../components/auth/SignupSuccessPage').then(module => ({ default: module.SignupSuccessPage })));
 
-// Lazy load feature modules - Fixed: Remove destructuring since lazyImport returns the component directly
+// Lazy load feature modules
 const ChatArea = lazyImport(() => import('../components/layout/ChatArea'), 'ChatArea');
 const ConversationSidebar = lazyImport(() => import('../components/layout/ConversationSidebar'), 'ConversationSidebar');
 const ContextDrawer = lazyImport(() => import('../components/layout/ContextDrawer'), 'ContextDrawer');
 const RegulatoryWizard = lazyImport(() => import('../components/onboarding/RegulatoryWizard'), 'RegulatoryWizard');
 const DocumentGenerator = lazyImport(() => import('../components/documents/DocumentGenerator'), 'DocumentGenerator');
 const RegulatoryIntelligence = lazyImport(() => import('../components/regulatory/RegulatoryIntelligence'), 'RegulatoryIntelligence');
+const ProfileSettings = lazyImport(() => import('../components/profile/ProfileSettings'), 'ProfileSettings');
 
 // Loading fallback with animation
 const PageLoader = () => (
@@ -99,6 +100,21 @@ const RegulatoryIntelligenceLayout: React.FC = () => {
   );
 };
 
+const ProfileSettingsLayout: React.FC = () => {
+  return (
+    <ProtectedRoute>
+      <QualiPilotInterface>
+        <SystemStatusBar />
+        <div className="h-[calc(100vh-3.5rem)] mt-14 overflow-y-auto">
+          <Suspense fallback={<PageLoader />}>
+            <ProfileSettings />
+          </Suspense>
+        </div>
+      </QualiPilotInterface>
+    </ProtectedRoute>
+  );
+};
+
 export const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -117,7 +133,7 @@ export const AppRoutes = () => {
         <Route path="/documents" element={<DocumentGeneratorLayout />} />
         <Route path="/regulatory" element={<RegulatoryIntelligenceLayout />} />
         <Route path="/compliance" element={<DashboardLayout />} />
-        <Route path="/settings" element={<DashboardLayout />} />
+        <Route path="/settings" element={<ProfileSettingsLayout />} />
         
         {/* Default Redirects */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
