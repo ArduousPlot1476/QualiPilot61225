@@ -24,16 +24,17 @@ const DocumentGenerator = lazyImport(() => import('../components/documents/Docum
 const RegulatoryIntelligence = lazyImport(() => import('../components/regulatory/RegulatoryIntelligence'), 'RegulatoryIntelligence');
 const ProfileSettings = lazyImport(() => import('../components/profile/ProfileSettings'), 'ProfileSettings');
 const CompanySettings = lazyImport(() => import('../components/profile/CompanySettings'), 'CompanySettings');
+const FileUploadPage = lazyImport(() => import('../pages/FileUploadPage'), 'FileUploadPage');
 
 // Loading fallback with animation
 const PageLoader = () => (
-  <div className="flex items-center justify-center h-screen bg-slate-50 animate-fade-in">
+  <div className="flex items-center justify-center h-screen bg-slate-50 dark:bg-slate-900 animate-fade-in">
     <div className="text-center">
       <div className="relative w-20 h-20 mx-auto mb-4">
         <div className="absolute inset-0 bg-gradient-to-r from-teal-400 to-teal-600 rounded-full opacity-30 animate-pulse"></div>
-        <Loader2 className="h-20 w-20 text-teal-600 animate-spin absolute inset-0" />
+        <Loader2 className="h-20 w-20 text-teal-600 dark:text-teal-500 animate-spin absolute inset-0" />
       </div>
-      <p className="text-slate-600 font-medium">Loading QualiPilot...</p>
+      <p className="text-slate-600 dark:text-slate-300 font-medium">Loading QualiPilot...</p>
     </div>
   </div>
 );
@@ -131,6 +132,21 @@ const CompanySettingsLayout: React.FC = () => {
   );
 };
 
+const FileUploadLayout: React.FC = () => {
+  return (
+    <ProtectedRoute>
+      <QualiPilotInterface>
+        <SystemStatusBar />
+        <div className="h-[calc(100vh-3.5rem)] mt-14 overflow-y-auto">
+          <Suspense fallback={<PageLoader />}>
+            <FileUploadPage />
+          </Suspense>
+        </div>
+      </QualiPilotInterface>
+    </ProtectedRoute>
+  );
+};
+
 export const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -151,6 +167,7 @@ export const AppRoutes = () => {
         <Route path="/compliance" element={<DashboardLayout />} />
         <Route path="/settings/profile" element={<ProfileSettingsLayout />} />
         <Route path="/settings/company" element={<CompanySettingsLayout />} />
+        <Route path="/upload" element={<FileUploadLayout />} />
         
         {/* Default Redirects */}
         <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
