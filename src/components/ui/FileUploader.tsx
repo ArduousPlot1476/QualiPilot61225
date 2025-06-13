@@ -1,4 +1,4 @@
-import React, { useState, useRef, useCallback } from 'react';
+import React, { useState, useRef, useCallback, useEffect } from 'react';
 import { Upload, File, X, AlertTriangle, CheckCircle, Loader2, Trash, Eye, Download, FileText, Image, Film, Music, Archive, Code, Database } from 'lucide-react';
 import { supabase } from '../../lib/supabase/client';
 import { useToast } from './Toast';
