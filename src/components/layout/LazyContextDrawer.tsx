@@ -26,8 +26,6 @@ export const LazyContextDrawer: React.FC = () => {
     { id: 'alerts', label: 'Alerts' }
   ] as const;
 
-  if (!contextDrawerOpen) return null;
-
   return (
     <aside className="w-80 bg-white dark:bg-slate-800 border-l border-slate-200 dark:border-slate-700 flex flex-col h-full shadow-lg">
       {/* Header */}

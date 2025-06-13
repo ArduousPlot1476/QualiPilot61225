@@ -27,7 +27,7 @@ export const SourcesTab: React.FC = () => {
     
     const filtered = documents.filter(doc => 
       doc.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      doc.category.toLowerCase().includes(searchTerm.toLowerCase())
+      (doc.category && doc.category.toLowerCase().includes(searchTerm.toLowerCase()))
     );
     setFilteredDocuments(filtered);
   }, [searchTerm, documents]);

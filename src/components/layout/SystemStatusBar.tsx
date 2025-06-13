@@ -9,18 +9,14 @@ import { HelpCenterButton } from '../ui/HelpCenter';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
 import { ThemeToggle } from '../ui/ThemeToggle';
 import { useAuth } from '../auth/AuthProvider';
+import { useAlerts } from '../../hooks/useAlerts';
 
 export const SystemStatusBar: React.FC = () => {
-  const { complianceStatus, toggleSidebar, alerts } = useAppStore();
+  const { complianceStatus, toggleSidebar } = useAppStore();
   const { isOnline, isSyncing, pendingCount, forceSync } = useSync();
   const { user } = useAuth();
-  const [unreadAlerts, setUnreadAlerts] = useState(0);
-
-  // Count unread alerts
-  useEffect(() => {
-    const unreadCount = alerts.filter(alert => !alert.isRead).length;
-    setUnreadAlerts(unreadCount);
-  }, [alerts]);
+  const { getUnreadCount } = useAlerts();
+  const unreadAlertCount = getUnreadCount();
 
   const criticalCount = complianceStatus.filter(s => s.status === 'critical').length;
   const warningCount = complianceStatus.filter(s => s.status === 'warning').length;
@@ -64,15 +60,15 @@ export const SystemStatusBar: React.FC = () => {
           {/* Alerts Status */}
           <div className="flex items-center space-x-4">
             <TransitionWrapper
-              show={unreadAlerts > 0}
+              show={unreadAlertCount > 0}
               enter="transition-all duration-300"
               enterFrom="opacity-0 scale-75"
               enterTo="opacity-100 scale-100"
             >
-              {unreadAlerts > 0 && (
+              {unreadAlertCount > 0 && (
                 <div className="flex items-center space-x-1 px-3 py-1 rounded-full bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 hover-lift transition-all-300">
                   <Bot className="h-4 w-4 text-red-500 dark:text-red-400" />
-                  <span className="text-sm font-medium text-red-700 dark:text-red-300">{unreadAlerts}</span>
+                  <span className="text-sm font-medium text-red-700 dark:text-red-300">{unreadAlertCount}</span>
                 </div>
               )}
             </TransitionWrapper>

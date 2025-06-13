@@ -18,7 +18,7 @@ export const useAppStore = create<AppState>((set, get) => ({
   complianceStatus: initialComplianceStatus,
   chatMessages: [],
   
-  // Data
+  // Data - all initialized as empty arrays
   threads: [],
   conversationThreads: [],
   messages: [],
