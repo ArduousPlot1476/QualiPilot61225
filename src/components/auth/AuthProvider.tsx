@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase, authHelpers, dbHelpers, SupabaseError } from '../../lib/supabase/client';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 interface AuthContextType {
   user: User | null;
@@ -39,6 +40,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [isConfigured, setIsConfigured] = useState(false);
+  const navigate = useNavigate();
+  const location = useLocation();
 
   // Check if Supabase is properly configured
   const checkConfiguration = () => {
@@ -113,11 +116,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             if (event === 'SIGNED_IN' && session?.user) {
               try {
                 await loadUserProfile(session.user.id, session.user.email);
+                
+                // Redirect to onboarding if needed
+                const currentPath = location.pathname;
+                if (currentPath === '/auth/login' || currentPath === '/auth/signup' || currentPath === '/') {
+                  navigate('/welcome');
+                }
               } catch (profileError) {
                 console.warn('Could not load user profile after sign in:', profileError);
               }
             } else if (event === 'SIGNED_OUT') {
               setUserProfile(null);
+              navigate('/');
             }
           }
         );
@@ -154,7 +164,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         authSubscription.unsubscribe();
       }
     };
-  }, []);
+  }, [navigate, location.pathname]);
 
   const loadUserProfile = async (userId: string, userEmail?: string) => {
     try {

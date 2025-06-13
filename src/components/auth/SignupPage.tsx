@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from './AuthProvider';
-import { Eye, EyeOff, Mail, Lock, Shield, Building, Users, MapPin, AlertCircle, Loader2, CheckCircle } from 'lucide-react';
+import { Eye, EyeOff, Mail, Lock, Bot, Building, Users, MapPin, AlertCircle, Loader2 } from 'lucide-react';
 
 const COMPANY_SIZES = [
   { value: 'startup', label: 'Startup (1-10 employees)' },
@@ -41,6 +41,15 @@ export const SignupPage: React.FC = () => {
 
   const { signUp, error, clearError } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Check if we should redirect to landing page
+  useEffect(() => {
+    // If we're on the signup page directly (not via redirect), show the landing page first
+    if (location.key === 'default' && location.pathname === '/auth/signup') {
+      navigate('/', { replace: true });
+    }
+  }, [location, navigate]);
 
   const validatePassword = (password: string) => {
     const errors = [];
@@ -129,7 +138,8 @@ export const SignupPage: React.FC = () => {
         company_name: formData.companyName,
         company_size: formData.companySize,
         industry_type: formData.industryType,
-        business_address: formData.businessAddress
+        address: formData.businessAddress,
+        onboarding_completed: false
       };
 
       await signUp(formData.email, formData.password, companyInfo);
@@ -146,38 +156,38 @@ export const SignupPage: React.FC = () => {
   const passwordStrength = formData.password ? validatePassword(formData.password) : [];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-lg w-full space-y-8">
         {/* Header */}
         <div className="text-center">
-          <div className="mx-auto h-16 w-16 bg-blue-600 rounded-full flex items-center justify-center mb-6">
-            <Shield className="h-8 w-8 text-white" />
+          <div className="mx-auto h-16 w-16 bg-teal-600 dark:bg-teal-700 rounded-full flex items-center justify-center mb-6">
+            <Bot className="h-8 w-8 text-white" />
           </div>
-          <h2 className="text-3xl font-bold text-slate-900 mb-2">
+          <h2 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
             Join QualiPilot
           </h2>
-          <p className="text-slate-600">
+          <p className="text-slate-600 dark:text-slate-300">
             Create your medical device compliance account
           </p>
         </div>
 
         {/* Signup Form */}
-        <div className="bg-white rounded-xl shadow-lg p-8">
+        <div className="bg-white dark:bg-slate-800 rounded-xl shadow-lg p-8">
           <form className="space-y-6" onSubmit={handleSubmit}>
             {/* Global Error */}
             {error && (
-              <div className="bg-red-50 border border-red-200 rounded-lg p-4 flex items-start space-x-3">
-                <AlertCircle className="h-5 w-5 text-red-500 mt-0.5 flex-shrink-0" />
+              <div className="bg-red-50 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4 flex items-start space-x-3">
+                <AlertCircle className="h-5 w-5 text-red-500 dark:text-red-400 mt-0.5 flex-shrink-0" />
                 <div>
-                  <h3 className="text-sm font-medium text-red-800">Sign up failed</h3>
-                  <p className="text-sm text-red-700 mt-1">{error}</p>
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Sign up failed</h3>
+                  <p className="text-sm text-red-700 dark:text-red-400 mt-1">{error}</p>
                 </div>
               </div>
             )}
 
             {/* Email Field */}
             <div>
-              <label htmlFor="email" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="email" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Email Address *
               </label>
               <div className="relative">
@@ -191,22 +201,22 @@ export const SignupPage: React.FC = () => {
                   autoComplete="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange('email', e.target.value)}
-                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-white ${
                     validationErrors.email 
-                      ? 'border-red-300 bg-red-50' 
-                      : 'border-slate-300 hover:border-slate-400'
+                      ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                   }`}
                   placeholder="Enter your email"
                 />
               </div>
               {validationErrors.email && (
-                <p className="mt-2 text-sm text-red-600">{validationErrors.email}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{validationErrors.email}</p>
               )}
             </div>
 
             {/* Password Field */}
             <div>
-              <label htmlFor="password" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="password" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Password *
               </label>
               <div className="relative">
@@ -220,10 +230,10 @@ export const SignupPage: React.FC = () => {
                   autoComplete="new-password"
                   value={formData.password}
                   onChange={(e) => handleInputChange('password', e.target.value)}
-                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-white ${
                     validationErrors.password 
-                      ? 'border-red-300 bg-red-50' 
-                      : 'border-slate-300 hover:border-slate-400'
+                      ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                   }`}
                   placeholder="Create a strong password"
                 />
@@ -233,9 +243,9 @@ export const SignupPage: React.FC = () => {
                   onClick={() => setShowPassword(!showPassword)}
                 >
                   {showPassword ? (
-                    <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                    <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   ) : (
-                    <Eye className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                    <Eye className="h-5 w-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   )}
                 </button>
               </div>
@@ -250,17 +260,17 @@ export const SignupPage: React.FC = () => {
                         className={`h-1 flex-1 rounded ${
                           passwordStrength.length <= 4 - level
                             ? passwordStrength.length === 0
-                              ? 'bg-green-500'
+                              ? 'bg-green-500 dark:bg-green-400'
                               : passwordStrength.length <= 2
-                              ? 'bg-yellow-500'
-                              : 'bg-red-500'
-                            : 'bg-slate-200'
+                              ? 'bg-yellow-500 dark:bg-yellow-400'
+                              : 'bg-red-500 dark:bg-red-400'
+                            : 'bg-slate-200 dark:bg-slate-700'
                         }`}
                       />
                     ))}
                   </div>
                   {passwordStrength.length > 0 && (
-                    <p className="text-xs text-slate-600">
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
                       Password needs: {passwordStrength.join(', ')}
                     </p>
                   )}
@@ -268,13 +278,13 @@ export const SignupPage: React.FC = () => {
               )}
               
               {validationErrors.password && (
-                <p className="mt-2 text-sm text-red-600">{validationErrors.password}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{validationErrors.password}</p>
               )}
             </div>
 
             {/* Confirm Password Field */}
             <div>
-              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 mb-2">
+              <label htmlFor="confirmPassword" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                 Confirm Password *
               </label>
               <div className="relative">
@@ -288,10 +298,10 @@ export const SignupPage: React.FC = () => {
                   autoComplete="new-password"
                   value={formData.confirmPassword}
                   onChange={(e) => handleInputChange('confirmPassword', e.target.value)}
-                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`block w-full pl-10 pr-10 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-white ${
                     validationErrors.confirmPassword 
-                      ? 'border-red-300 bg-red-50' 
-                      : 'border-slate-300 hover:border-slate-400'
+                      ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                   }`}
                   placeholder="Confirm your password"
                 />
@@ -301,24 +311,24 @@ export const SignupPage: React.FC = () => {
                   onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                 >
                   {showConfirmPassword ? (
-                    <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                    <EyeOff className="h-5 w-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   ) : (
-                    <Eye className="h-5 w-5 text-slate-400 hover:text-slate-600" />
+                    <Eye className="h-5 w-5 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300" />
                   )}
                 </button>
               </div>
               {validationErrors.confirmPassword && (
-                <p className="mt-2 text-sm text-red-600">{validationErrors.confirmPassword}</p>
+                <p className="mt-2 text-sm text-red-600 dark:text-red-400">{validationErrors.confirmPassword}</p>
               )}
             </div>
 
             {/* Company Information Section */}
-            <div className="border-t border-slate-200 pt-6">
-              <h3 className="text-lg font-medium text-slate-900 mb-4">Company Information</h3>
+            <div className="border-t border-slate-200 dark:border-slate-700 pt-6">
+              <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">Company Information</h3>
               
               {/* Company Name */}
               <div className="mb-4">
-                <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="companyName" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Company Name *
                 </label>
                 <div className="relative">
@@ -331,22 +341,22 @@ export const SignupPage: React.FC = () => {
                     type="text"
                     value={formData.companyName}
                     onChange={(e) => handleInputChange('companyName', e.target.value)}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-white ${
                       validationErrors.companyName 
-                        ? 'border-red-300 bg-red-50' 
-                        : 'border-slate-300 hover:border-slate-400'
+                        ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                     }`}
                     placeholder="Enter your company name"
                   />
                 </div>
                 {validationErrors.companyName && (
-                  <p className="mt-2 text-sm text-red-600">{validationErrors.companyName}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{validationErrors.companyName}</p>
                 )}
               </div>
 
               {/* Company Size */}
               <div className="mb-4">
-                <label htmlFor="companySize" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="companySize" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Company Size *
                 </label>
                 <div className="relative">
@@ -358,10 +368,10 @@ export const SignupPage: React.FC = () => {
                     name="companySize"
                     value={formData.companySize}
                     onChange={(e) => handleInputChange('companySize', e.target.value)}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-white ${
                       validationErrors.companySize 
-                        ? 'border-red-300 bg-red-50' 
-                        : 'border-slate-300 hover:border-slate-400'
+                        ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                     }`}
                   >
                     <option value="">Select company size</option>
@@ -373,13 +383,13 @@ export const SignupPage: React.FC = () => {
                   </select>
                 </div>
                 {validationErrors.companySize && (
-                  <p className="mt-2 text-sm text-red-600">{validationErrors.companySize}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{validationErrors.companySize}</p>
                 )}
               </div>
 
               {/* Industry Type */}
               <div className="mb-4">
-                <label htmlFor="industryType" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="industryType" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Industry Type *
                 </label>
                 <select
@@ -387,10 +397,10 @@ export const SignupPage: React.FC = () => {
                   name="industryType"
                   value={formData.industryType}
                   onChange={(e) => handleInputChange('industryType', e.target.value)}
-                  className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors ${
+                  className={`block w-full px-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors dark:bg-slate-800 dark:border-slate-700 dark:text-white ${
                     validationErrors.industryType 
-                      ? 'border-red-300 bg-red-50' 
-                      : 'border-slate-300 hover:border-slate-400'
+                      ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                      : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                   }`}
                 >
                   <option value="">Select industry type</option>
@@ -401,13 +411,13 @@ export const SignupPage: React.FC = () => {
                   ))}
                 </select>
                 {validationErrors.industryType && (
-                  <p className="mt-2 text-sm text-red-600">{validationErrors.industryType}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{validationErrors.industryType}</p>
                 )}
               </div>
 
               {/* Business Address */}
               <div className="mb-4">
-                <label htmlFor="businessAddress" className="block text-sm font-medium text-slate-700 mb-2">
+                <label htmlFor="businessAddress" className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
                   Business Address *
                 </label>
                 <div className="relative">
@@ -420,16 +430,16 @@ export const SignupPage: React.FC = () => {
                     rows={3}
                     value={formData.businessAddress}
                     onChange={(e) => handleInputChange('businessAddress', e.target.value)}
-                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-colors resize-none ${
+                    className={`block w-full pl-10 pr-3 py-3 border rounded-lg focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent transition-colors resize-none dark:bg-slate-800 dark:border-slate-700 dark:text-white ${
                       validationErrors.businessAddress 
-                        ? 'border-red-300 bg-red-50' 
-                        : 'border-slate-300 hover:border-slate-400'
+                        ? 'border-red-300 dark:border-red-700 bg-red-50 dark:bg-red-900/20' 
+                        : 'border-slate-300 dark:border-slate-600 hover:border-slate-400 dark:hover:border-slate-500'
                     }`}
                     placeholder="Enter your business address"
                   />
                 </div>
                 {validationErrors.businessAddress && (
-                  <p className="mt-2 text-sm text-red-600">{validationErrors.businessAddress}</p>
+                  <p className="mt-2 text-sm text-red-600 dark:text-red-400">{validationErrors.businessAddress}</p>
                 )}
               </div>
             </div>
@@ -443,22 +453,22 @@ export const SignupPage: React.FC = () => {
                   type="checkbox"
                   checked={formData.acceptTerms}
                   onChange={(e) => handleInputChange('acceptTerms', e.target.checked)}
-                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-slate-300 rounded"
+                  className="h-4 w-4 text-teal-600 focus:ring-teal-500 border-slate-300 dark:border-slate-600 rounded"
                 />
               </div>
               <div className="ml-3 text-sm">
-                <label htmlFor="acceptTerms" className="text-slate-700">
+                <label htmlFor="acceptTerms" className="text-slate-700 dark:text-slate-300">
                   I agree to the{' '}
-                  <Link to="/terms" className="text-blue-600 hover:text-blue-500">
+                  <Link to="/terms" className="font-medium text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300">
                     Terms of Service
                   </Link>{' '}
                   and{' '}
-                  <Link to="/privacy" className="text-blue-600 hover:text-blue-500">
+                  <Link to="/privacy" className="font-medium text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300">
                     Privacy Policy
                   </Link>
                 </label>
                 {validationErrors.acceptTerms && (
-                  <p className="mt-1 text-red-600">{validationErrors.acceptTerms}</p>
+                  <p className="mt-1 text-red-600 dark:text-red-400">{validationErrors.acceptTerms}</p>
                 )}
               </div>
             </div>
@@ -467,7 +477,7 @@ export const SignupPage: React.FC = () => {
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-teal-600 dark:bg-teal-700 hover:bg-teal-700 dark:hover:bg-teal-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-teal-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
             >
               {isLoading ? (
                 <>
@@ -482,11 +492,11 @@ export const SignupPage: React.FC = () => {
 
           {/* Sign In Link */}
           <div className="mt-6 text-center">
-            <p className="text-sm text-slate-600">
+            <p className="text-sm text-slate-600 dark:text-slate-400">
               Already have an account?{' '}
               <Link
                 to="/auth/login"
-                className="font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                className="font-medium text-teal-600 dark:text-teal-400 hover:text-teal-500 dark:hover:text-teal-300 transition-colors"
               >
                 Sign in to QualiPilot
               </Link>

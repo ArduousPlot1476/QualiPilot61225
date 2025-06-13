@@ -14,6 +14,8 @@ const SignupPage = React.lazy(() => import('../components/auth/SignupPage').then
 const ForgotPasswordPage = React.lazy(() => import('../components/auth/ForgotPasswordPage').then(module => ({ default: module.ForgotPasswordPage })));
 const ResetPasswordPage = React.lazy(() => import('../components/auth/ResetPasswordPage').then(module => ({ default: module.ResetPasswordPage })));
 const SignupSuccessPage = React.lazy(() => import('../components/auth/SignupSuccessPage').then(module => ({ default: module.SignupSuccessPage })));
+const LandingPage = React.lazy(() => import('../pages/LandingPage').then(module => ({ default: module.LandingPage })));
+const OnboardingRedirect = React.lazy(() => import('../pages/OnboardingRedirect').then(module => ({ default: module.OnboardingRedirect })));
 
 // Lazy load feature modules
 const ChatArea = lazyImport(() => import('../components/layout/ChatArea'), 'ChatArea');
@@ -152,11 +154,15 @@ export const AppRoutes = () => {
     <Suspense fallback={<PageLoader />}>
       <Routes>
         {/* Public Routes */}
+        <Route path="/" element={<LandingPage />} />
         <Route path="/auth/login" element={<LoginPage />} />
         <Route path="/auth/signup" element={<SignupPage />} />
         <Route path="/auth/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/auth/reset-password" element={<ResetPasswordPage />} />
         <Route path="/auth/signup-success" element={<SignupSuccessPage />} />
+        
+        {/* Onboarding Redirect */}
+        <Route path="/welcome" element={<OnboardingRedirect />} />
         
         {/* Protected Routes */}
         <Route path="/dashboard" element={<DashboardLayout />} />
@@ -171,8 +177,7 @@ export const AppRoutes = () => {
         
         {/* Default Redirects */}
         <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Suspense>
   );
