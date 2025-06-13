@@ -1,9 +1,13 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Search, MessageCircle, Trash2, Edit2 } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search, MessageCircle, Trash2, Edit2, AlertTriangle } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
 import { EmptyState } from '../ui/EmptyState';
 import { FocusableElement } from '../ui/FocusableElement';
+import { ChatService } from '../../lib/ai/chatService';
+import { useOptimisticUpdates } from '../../hooks/useOptimisticUpdates';
+import { useToast } from '../ui/Toast';
+import { ConversationThread } from '../../types';
 
 export const ConversationSidebar: React.FC = () => {
   const { 
@@ -13,13 +17,26 @@ export const ConversationSidebar: React.FC = () => {
     selectedThreadId,
     setSelectedThread 
   } = useAppStore();
+  
   const [searchTerm, setSearchTerm] = useState('');
   const [isEditing, setIsEditing] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const editInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
+  const { showToast } = useToast();
 
-  const filteredThreads = conversationThreads.filter(thread =>
+  // Use optimistic updates for thread operations
+  const { 
+    data: optimisticThreads, 
+    createItem: createThread,
+    updateItem: updateThread,
+    deleteItem: deleteThread,
+    isOptimistic,
+    isPending
+  } = useOptimisticUpdates<ConversationThread>(conversationThreads, 'threads');
+
+  const filteredThreads = optimisticThreads.filter(thread =>
     thread.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
     thread.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
   );
@@ -37,9 +54,42 @@ export const ConversationSidebar: React.FC = () => {
     return `${days}d`;
   };
 
-  const handleNewThread = () => {
-    // TODO: Implement new thread creation
-    console.log('Create new thread');
+  const handleNewThread = async () => {
+    try {
+      // Create a new thread with a default title
+      const title = "New Conversation";
+      
+      // Optimistically add the thread to the UI
+      await createThread({
+        title,
+        lastMessage: "Start a new conversation",
+        timestamp: new Date(),
+        unreadCount: 0,
+        isSelected: true
+      });
+      
+      // The actual API call is queued by useOptimisticUpdates
+      // and will be executed in the background
+      const newThread = await ChatService.createThread(title);
+      
+      // Select the new thread
+      setSelectedThread(newThread.id);
+      
+      showToast({
+        type: 'success',
+        title: 'Thread Created',
+        message: 'New conversation thread created',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('Failed to create thread:', error);
+      showToast({
+        type: 'error',
+        title: 'Thread Creation Failed',
+        message: error instanceof Error ? error.message : 'Could not create new conversation',
+        duration: 5000
+      });
+    }
   };
 
   const handleEditThread = (id: string, title: string) => {
@@ -55,17 +105,79 @@ export const ConversationSidebar: React.FC = () => {
     }, 50);
   };
 
-  const handleSaveEdit = (id: string) => {
-    if (editTitle.trim()) {
-      // TODO: Implement thread title update
-      console.log('Update thread title:', id, editTitle);
+  const handleSaveEdit = async (id: string) => {
+    if (!editTitle.trim()) {
+      setIsEditing(null);
+      return;
     }
-    setIsEditing(null);
+    
+    try {
+      // Optimistically update the thread title in the UI
+      await updateThread(id, { title: editTitle });
+      
+      // The actual API call is queued by useOptimisticUpdates
+      await ChatService.updateThreadTitle(id, editTitle);
+      
+      showToast({
+        type: 'success',
+        title: 'Thread Updated',
+        message: 'Conversation title updated',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('Failed to update thread:', error);
+      showToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: error instanceof Error ? error.message : 'Could not update conversation title',
+        duration: 5000
+      });
+    } finally {
+      setIsEditing(null);
+    }
   };
 
-  const handleDeleteThread = (id: string) => {
-    // TODO: Implement thread deletion with confirmation
-    console.log('Delete thread:', id);
+  const handleDeleteThread = async (id: string) => {
+    setIsDeleting(id);
+  };
+
+  const confirmDeleteThread = async (id: string) => {
+    try {
+      // Optimistically remove the thread from the UI
+      await deleteThread(id);
+      
+      // The actual API call is queued by useOptimisticUpdates
+      await ChatService.deleteThread(id);
+      
+      // If the deleted thread was selected, select another thread
+      if (id === selectedThreadId) {
+        const nextThread = optimisticThreads.find(t => t.id !== id);
+        if (nextThread) {
+          setSelectedThread(nextThread.id);
+        }
+      }
+      
+      showToast({
+        type: 'success',
+        title: 'Thread Deleted',
+        message: 'Conversation deleted successfully',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('Failed to delete thread:', error);
+      showToast({
+        type: 'error',
+        title: 'Deletion Failed',
+        message: error instanceof Error ? error.message : 'Could not delete conversation',
+        duration: 5000
+      });
+    } finally {
+      setIsDeleting(null);
+    }
+  };
+
+  const cancelDeleteThread = () => {
+    setIsDeleting(null);
   };
 
   // Handle keyboard shortcuts
@@ -87,11 +199,16 @@ export const ConversationSidebar: React.FC = () => {
       if (e.key === 'Escape' && isEditing) {
         setIsEditing(null);
       }
+      
+      // Escape to cancel deletion
+      if (e.key === 'Escape' && isDeleting) {
+        setIsDeleting(null);
+      }
     };
     
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isEditing]);
+  }, [isEditing, isDeleting]);
 
   return (
     <div className={`
@@ -171,6 +288,8 @@ export const ConversationSidebar: React.FC = () => {
                     ? 'bg-teal-50 border-r-4 border-r-teal-500' 
                     : 'hover:bg-slate-50'
                   }
+                  ${isOptimistic(thread.id) ? 'opacity-70' : ''}
+                  ${isPending(thread.id) ? 'opacity-85' : ''}
                 `}
                 focusClassName="ring-2 ring-teal-500 ring-inset"
               >
@@ -193,11 +312,8 @@ export const ConversationSidebar: React.FC = () => {
                 icon={MessageCircle}
                 title={searchTerm ? 'No conversations found' : 'No conversations yet'}
                 description={searchTerm ? 'Try a different search term' : 'Start your first conversation'}
-                action={
-                  searchTerm 
-                    ? { label: 'Clear Search', onClick: () => setSearchTerm('') }
-                    : { label: 'New Conversation', onClick: handleNewThread }
-                }
+                actionLabel={searchTerm ? 'Clear Search' : 'New Conversation'}
+                onAction={searchTerm ? () => setSearchTerm('') : handleNewThread}
               />
             ) : (
               filteredThreads.map((thread) => (
@@ -205,7 +321,9 @@ export const ConversationSidebar: React.FC = () => {
                   key={thread.id}
                   className={`
                     relative group
-                    ${isEditing === thread.id ? 'z-10' : ''}
+                    ${isEditing === thread.id || isDeleting === thread.id ? 'z-10' : ''}
+                    ${isOptimistic(thread.id) ? 'opacity-70' : ''}
+                    ${isPending(thread.id) ? 'opacity-85' : ''}
                   `}
                 >
                   {isEditing === thread.id ? (
@@ -227,15 +345,42 @@ export const ConversationSidebar: React.FC = () => {
                       <div className="flex justify-end mt-2 space-x-2">
                         <button
                           onClick={() => setIsEditing(null)}
-                          className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded transition-colors"
+                          className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded transition-colors focus-ring"
                         >
                           Cancel
                         </button>
                         <button
                           onClick={() => handleSaveEdit(thread.id)}
-                          className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors"
+                          className="px-2 py-1 text-xs bg-teal-600 text-white rounded hover:bg-teal-700 transition-colors focus-ring"
                         >
                           Save
+                        </button>
+                      </div>
+                    </div>
+                  ) : isDeleting === thread.id ? (
+                    // Delete confirmation
+                    <div className="p-3 bg-white border border-red-300 rounded-lg shadow-md animate-fade-in">
+                      <div className="flex items-start space-x-2 mb-3">
+                        <AlertTriangle className="h-5 w-5 text-red-500 flex-shrink-0 mt-0.5" />
+                        <div>
+                          <h4 className="font-medium text-slate-900 text-sm">Delete conversation?</h4>
+                          <p className="text-xs text-slate-600 mt-1">
+                            This will permanently delete this conversation and all its messages.
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex justify-end space-x-2">
+                        <button
+                          onClick={cancelDeleteThread}
+                          className="px-2 py-1 text-xs text-slate-600 hover:bg-slate-100 rounded transition-colors focus-ring"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          onClick={() => confirmDeleteThread(thread.id)}
+                          className="px-2 py-1 text-xs bg-red-600 text-white rounded hover:bg-red-700 transition-colors focus-ring"
+                        >
+                          Delete
                         </button>
                       </div>
                     </div>

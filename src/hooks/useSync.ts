@@ -36,7 +36,7 @@ export const useSync = (): SyncHookReturn => {
         message: 'Changes will sync when connection is restored',
         duration: 0 // Don't auto-dismiss
       });
-    } else if (toastId) {
+    } else if (syncState.isOnline && toastId) {
       updateToast(toastId, {
         type: 'success',
         title: 'Back Online',

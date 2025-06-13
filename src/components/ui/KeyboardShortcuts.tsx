@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Keyboard, X, Search, Info } from 'lucide-react';
+import { TransitionWrapper } from './TransitionWrapper';
 
 interface ShortcutCategory {
   name: string;
@@ -55,6 +56,35 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
 export const KeyboardShortcutButton: React.FC<{ className?: string }> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   
+  // Listen for global ? key press
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === '?' && !e.ctrlKey && !e.altKey && !e.metaKey) {
+        // Don't trigger when typing in input fields
+        if (
+          e.target instanceof HTMLInputElement ||
+          e.target instanceof HTMLTextAreaElement ||
+          e.target instanceof HTMLSelectElement
+        ) {
+          return;
+        }
+        
+        setIsOpen(true);
+      }
+    };
+    
+    // Also listen for custom event from main.tsx
+    const handleOpenHelp = () => setIsOpen(true);
+    
+    document.addEventListener('keydown', handleKeyDown);
+    document.addEventListener('openHelpCenter', handleOpenHelp);
+    
+    return () => {
+      document.removeEventListener('keydown', handleKeyDown);
+      document.removeEventListener('openHelpCenter', handleOpenHelp);
+    };
+  }, []);
+  
   return (
     <>
       <button
@@ -65,7 +95,17 @@ export const KeyboardShortcutButton: React.FC<{ className?: string }> = ({ class
         <Keyboard className="h-5 w-5 text-slate-600" />
       </button>
       
-      {isOpen && <KeyboardShortcutsModal onClose={() => setIsOpen(false)} />}
+      <TransitionWrapper
+        show={isOpen}
+        enter="transition-all duration-300"
+        enterFrom="opacity-0 scale-95"
+        enterTo="opacity-100 scale-100"
+        leave="transition-all duration-200"
+        leaveFrom="opacity-100 scale-100"
+        leaveTo="opacity-0 scale-95"
+      >
+        <KeyboardShortcutsModal onClose={() => setIsOpen(false)} />
+      </TransitionWrapper>
     </>
   );
 };

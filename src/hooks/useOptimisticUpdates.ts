@@ -32,11 +32,26 @@ export function useOptimisticUpdates<T extends { id: string }>(
   const { showToast } = useToast();
   const rollbackTimeouts = useRef<Map<string, NodeJS.Timeout>>(new Map());
 
+  // Update state when initialData changes (e.g., from props)
+  React.useEffect(() => {
+    setState(prev => ({
+      ...prev,
+      data: initialData
+    }));
+  }, [initialData]);
+
   // Combine real data with optimistic updates
-  const combinedData = [
-    ...state.data.filter(item => !state.optimisticItems.has(item.id)),
-    ...Array.from(state.optimisticItems.values())
-  ].filter(item => !state.pendingOperations.get(item.id)?.includes('delete'));
+  const combinedData = React.useMemo(() => {
+    // Start with real data that isn't being modified
+    const realData = state.data.filter(item => !state.optimisticItems.has(item.id) && 
+      !state.pendingOperations.get(item.id)?.includes('delete'));
+    
+    // Add optimistic items that aren't being deleted
+    const optimisticData = Array.from(state.optimisticItems.values())
+      .filter(item => !state.pendingOperations.get(item.id)?.includes('delete'));
+    
+    return [...realData, ...optimisticData];
+  }, [state.data, state.optimisticItems, state.pendingOperations]);
 
   const createItem = useCallback(async (item: Omit<T, 'id'>) => {
     const optimisticId = `optimistic_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;

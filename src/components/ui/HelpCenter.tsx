@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { HelpCircle, X, Search, Book, Keyboard, MessageSquare, ExternalLink, ChevronRight, ArrowLeft } from 'lucide-react';
 import { KeyboardShortcutsModal } from './KeyboardShortcuts';
+import { TransitionWrapper } from './TransitionWrapper';
 
 interface HelpCenterProps {
   isOpen: boolean;
@@ -177,8 +178,9 @@ const HELP_ARTICLES: HelpArticle[] = [
         <button
           className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors focus-ring"
           onClick={() => {
-            // This would open the keyboard shortcuts modal
-            alert('This would open the keyboard shortcuts modal');
+            // Open the keyboard shortcuts modal
+            const event = new CustomEvent('openHelpCenter');
+            document.dispatchEvent(event);
           }}
         >
           View All Shortcuts
@@ -256,6 +258,13 @@ const HELP_ARTICLES: HelpArticle[] = [
 export const HelpCenterButton: React.FC<{ className?: string }> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
   
+  // Listen for global event to open help center
+  useEffect(() => {
+    const handleOpenHelp = () => setIsOpen(true);
+    document.addEventListener('openHelpCenter', handleOpenHelp);
+    return () => document.removeEventListener('openHelpCenter', handleOpenHelp);
+  }, []);
+  
   return (
     <>
       <button
@@ -266,7 +275,17 @@ export const HelpCenterButton: React.FC<{ className?: string }> = ({ className =
         <HelpCircle className="h-5 w-5 text-slate-600" />
       </button>
       
-      {isOpen && <HelpCenter isOpen={isOpen} onClose={() => setIsOpen(false)} />}
+      <TransitionWrapper
+        show={isOpen}
+        enter="transition-all duration-300"
+        enterFrom="opacity-0 scale-95"
+        enterTo="opacity-100 scale-100"
+        leave="transition-all duration-200"
+        leaveFrom="opacity-100 scale-100"
+        leaveTo="opacity-0 scale-95"
+      >
+        <HelpCenter isOpen={isOpen} onClose={() => setIsOpen(false)} />
+      </TransitionWrapper>
     </>
   );
 };
