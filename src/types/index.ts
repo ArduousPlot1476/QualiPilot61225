@@ -44,7 +44,6 @@ export interface ConversationThread {
   lastMessage: string;
   timestamp: Date;
   unreadCount: number;
-  isSelected: boolean;
 }
 
 export interface RegulatoryDocument {

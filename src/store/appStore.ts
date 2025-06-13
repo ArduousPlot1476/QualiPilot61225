@@ -55,8 +55,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         {
           ...thread,
           id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date(),
-          isSelected: false
+          timestamp: new Date()
         },
         ...state.threads
       ],
@@ -64,8 +63,7 @@ export const useAppStore = create<AppState>((set, get) => ({
         {
           ...thread,
           id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date(),
-          isSelected: false
+          timestamp: new Date()
         },
         ...state.conversationThreads
       ]
@@ -99,14 +97,8 @@ export const useAppStore = create<AppState>((set, get) => ({
 
   selectThread: (id) =>
     set((state) => ({
-      threads: state.threads.map(thread => ({
-        ...thread,
-        isSelected: thread.id === id
-      })),
-      conversationThreads: state.conversationThreads.map(thread => ({
-        ...thread,
-        isSelected: thread.id === id
-      }))
+      selectedThread: id,
+      selectedThreadId: id
     })),
 
   // Message Actions
