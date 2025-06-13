@@ -3,14 +3,13 @@ import { ChatService, ChatStreamResponse } from '../lib/ai/chatService';
 import { useToast } from '../components/ui/Toast';
 
 interface UseAIChatOptions {
-  threadId: string;
   onMessageComplete?: (response: ChatStreamResponse) => void;
 }
 
 interface UseAIChatReturn {
   isStreaming: boolean;
   streamingContent: string;
-  sendMessage: (message: string) => Promise<void>;
+  sendMessage: (message: string, threadId: string) => Promise<void>;
   stopStreaming: () => void;
   error: string | null;
   clearError: () => void;
@@ -18,7 +17,7 @@ interface UseAIChatReturn {
   retrievedDocs: number;
 }
 
-export const useAIChat = ({ threadId, onMessageComplete }: UseAIChatOptions): UseAIChatReturn => {
+export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatReturn => {
   const [isStreaming, setIsStreaming] = useState(false);
   const [streamingContent, setStreamingContent] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +26,7 @@ export const useAIChat = ({ threadId, onMessageComplete }: UseAIChatOptions): Us
   const abortControllerRef = useRef<AbortController | null>(null);
   const { showToast } = useToast();
 
-  const sendMessage = useCallback(async (message: string) => {
+  const sendMessage = useCallback(async (message: string, threadId: string) => {
     if (isStreaming) {
       console.warn('Already streaming a message');
       return;
@@ -106,7 +105,7 @@ export const useAIChat = ({ threadId, onMessageComplete }: UseAIChatOptions): Us
     } finally {
       abortControllerRef.current = null;
     }
-  }, [threadId, isStreaming, onMessageComplete, showToast]);
+  }, [isStreaming, onMessageComplete, showToast]);
 
   const stopStreaming = useCallback(() => {
     if (abortControllerRef.current) {

@@ -33,7 +33,7 @@ export const ChatArea: React.FC = () => {
 
   const selectedThread = conversationThreads.find(t => t.id === selectedThreadId);
 
-  // AI Chat integration - use selectedThreadId directly from store
+  // AI Chat integration - no longer pass threadId as prop
   const { 
     isStreaming, 
     streamingContent, 
@@ -42,7 +42,6 @@ export const ChatArea: React.FC = () => {
     error: aiError,
     clearError: clearAIError 
   } = useAIChat({
-    threadId: selectedThreadId || '1',
     onMessageComplete: (response) => {
       // Add the complete AI response to the message store
       addChatMessage({
@@ -65,8 +64,8 @@ export const ChatArea: React.FC = () => {
     }
   }, [chatMessages.length]);
 
-  // Create a new thread if needed
-  const ensureThread = async () => {
+  // Create a new thread if needed and return the thread ID
+  const ensureThread = async (): Promise<string> => {
     if (!selectedThreadId || selectedThreadId === '1') {
       setIsCreatingThread(true);
       try {
@@ -79,6 +78,7 @@ export const ChatArea: React.FC = () => {
           message: 'Created new conversation thread',
           duration: 2000
         });
+        return newThread.id;
       } catch (error) {
         console.error('Failed to create thread:', error);
         showToast({
@@ -87,10 +87,12 @@ export const ChatArea: React.FC = () => {
           message: 'Could not create new conversation',
           duration: 5000
         });
+        throw error;
       } finally {
         setIsCreatingThread(false);
       }
     }
+    return selectedThreadId;
   };
 
   const handleSendMessage = async (message: string) => {
@@ -98,22 +100,22 @@ export const ChatArea: React.FC = () => {
       return;
     }
 
-    // Ensure we have a valid thread
-    await ensureThread();
-
-    // Add user message to UI immediately with animation
-    addChatMessage({
-      content: message,
-      sender: 'user',
-      type: 'text'
-    });
-
-    // Hide help tip after first message
-    setShowHelpTip(false);
-
-    // Send to AI service
     try {
-      await sendMessage(message);
+      // Ensure we have a valid thread and get the thread ID
+      const threadId = await ensureThread();
+
+      // Add user message to UI immediately with animation
+      addChatMessage({
+        content: message,
+        sender: 'user',
+        type: 'text'
+      });
+
+      // Hide help tip after first message
+      setShowHelpTip(false);
+
+      // Send to AI service with the confirmed thread ID
+      await sendMessage(message, threadId);
     } catch (error) {
       console.error('Failed to send message:', error);
     }
