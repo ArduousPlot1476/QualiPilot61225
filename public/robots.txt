@@ -1,0 +1,11 @@
+# Allow all crawlers
+User-agent: *
+Allow: /
+
+# Disallow sensitive routes
+Disallow: /auth/
+Disallow: /settings/
+Disallow: /api/
+
+# Sitemap
+Sitemap: https://qualipilot.com/sitemap.xml

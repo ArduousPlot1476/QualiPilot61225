@@ -1,0 +1,161 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Base styles */
+@layer base {
+  html {
+    @apply text-slate-900 antialiased;
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-slate-50;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+  
+  /* Improved focus styles */
+  *:focus-visible {
+    @apply outline-none ring-2 ring-teal-500 ring-offset-2;
+  }
+  
+  /* Scrollbar styling */
+  ::-webkit-scrollbar {
+    @apply w-2 h-2;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-slate-100;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+  }
+  
+  /* Print styles */
+  @media print {
+    body {
+      @apply bg-white text-black;
+    }
+  }
+}
+
+/* Component styles */
+@layer components {
+  .focus-ring {
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2;
+  }
+  
+  .hover-scale {
+    @apply transition-transform duration-150 hover:scale-105;
+  }
+  
+  .hover-lift {
+    @apply transition-all duration-200 hover:shadow-md hover:-translate-y-0.5;
+  }
+  
+  /* Keyboard shortcut styling */
+  kbd {
+    @apply px-1.5 py-0.5 text-xs font-semibold bg-slate-100 border border-slate-300 rounded shadow-sm text-slate-700;
+  }
+  
+  /* Code block styling */
+  pre {
+    @apply p-4 bg-slate-900 text-slate-100 rounded-lg overflow-x-auto;
+  }
+  
+  code {
+    @apply font-mono text-sm;
+  }
+  
+  /* Markdown content styling */
+  .markdown-content h1 {
+    @apply text-2xl font-bold mb-4 mt-6;
+  }
+  
+  .markdown-content h2 {
+    @apply text-xl font-bold mb-3 mt-5;
+  }
+  
+  .markdown-content h3 {
+    @apply text-lg font-bold mb-3 mt-4;
+  }
+  
+  .markdown-content p {
+    @apply mb-4 leading-relaxed;
+  }
+  
+  .markdown-content ul, .markdown-content ol {
+    @apply mb-4 pl-5;
+  }
+  
+  .markdown-content li {
+    @apply mb-1;
+  }
+  
+  .markdown-content a {
+    @apply text-teal-600 hover:text-teal-700 underline;
+  }
+  
+  .markdown-content blockquote {
+    @apply pl-4 border-l-4 border-slate-300 text-slate-600 italic my-4;
+  }
+}
+
+/* Utility classes */
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .text-pretty {
+    text-wrap: pretty;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Improved truncation */
+  .line-clamp-1 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 1;
+  }
+  
+  .line-clamp-2 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 2;
+  }
+  
+  .line-clamp-3 {
+    overflow: hidden;
+    display: -webkit-box;
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: 3;
+  }
+}
+
+/* Reduced motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  
+  *, ::before, ::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
