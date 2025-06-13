@@ -65,13 +65,13 @@ export const Toast: React.FC<ToastProps> = ({
   const getColorClasses = () => {
     switch (type) {
       case 'success':
-        return 'bg-green-500 text-white border-green-600';
+        return 'bg-green-500 dark:bg-green-600 text-white border-green-600 dark:border-green-700';
       case 'error':
-        return 'bg-red-500 text-white border-red-600';
+        return 'bg-red-500 dark:bg-red-600 text-white border-red-600 dark:border-red-700';
       case 'warning':
-        return 'bg-yellow-500 text-white border-yellow-600';
+        return 'bg-yellow-500 dark:bg-yellow-600 text-white border-yellow-600 dark:border-yellow-700';
       case 'info':
-        return 'bg-blue-500 text-white border-blue-600';
+        return 'bg-blue-500 dark:bg-blue-600 text-white border-blue-600 dark:border-blue-700';
     }
   };
 
@@ -92,10 +92,10 @@ export const Toast: React.FC<ToastProps> = ({
       <div
         className={`
           ${getColorClasses()}
-          bg-opacity-90 backdrop-blur-sm
+          bg-opacity-90 dark:bg-opacity-90 backdrop-blur-sm
           rounded-lg border shadow-lg
           p-4 flex items-start space-x-3
-          hover:bg-opacity-100 transition-all duration-200
+          hover:bg-opacity-100 dark:hover:bg-opacity-100 transition-all duration-200
         `}
       >
         <div className="flex-shrink-0 mt-0.5">

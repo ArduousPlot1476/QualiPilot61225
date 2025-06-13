@@ -35,6 +35,22 @@ document.addEventListener('keydown', (e) => {
     const helpEvent = new CustomEvent('openHelpCenter');
     document.dispatchEvent(helpEvent);
   }
+  
+  // Toggle theme with Alt+Z
+  if (e.key === 'z' && e.altKey && !e.ctrlKey && !e.metaKey) {
+    // Don't trigger when typing in input fields
+    if (
+      e.target instanceof HTMLInputElement ||
+      e.target instanceof HTMLTextAreaElement ||
+      e.target instanceof HTMLSelectElement
+    ) {
+      return;
+    }
+    
+    // Dispatch custom event to toggle theme
+    const themeEvent = new CustomEvent('toggleTheme');
+    document.dispatchEvent(themeEvent);
+  }
 });
 
 root.render(

@@ -5,19 +5,22 @@ import { ToastProvider } from './components/ui/Toast';
 import { AppRoutes } from './routes';
 import { AppLayout } from './components/layout/AppLayout';
 import { ErrorBoundary } from './components/ui/ErrorBoundary';
+import { ThemeProvider } from './components/ui/ThemeProvider';
 
 function App() {
   return (
     <ErrorBoundary>
-      <ToastProvider>
-        <BrowserRouter>
-          <AuthProvider>
-            <AppLayout>
-              <AppRoutes />
-            </AppLayout>
-          </AuthProvider>
-        </BrowserRouter>
-      </ToastProvider>
+      <ThemeProvider>
+        <ToastProvider>
+          <BrowserRouter>
+            <AuthProvider>
+              <AppLayout>
+                <AppRoutes />
+              </AppLayout>
+            </AuthProvider>
+          </BrowserRouter>
+        </ToastProvider>
+      </ThemeProvider>
     </ErrorBoundary>
   );
 }

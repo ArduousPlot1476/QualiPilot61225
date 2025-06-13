@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Keyboard, X, Search, Info } from 'lucide-react';
 import { TransitionWrapper } from './TransitionWrapper';
+import { useThemeStore } from '../../store/themeStore';
 
 interface ShortcutCategory {
   name: string;
@@ -47,7 +48,7 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
       { keys: ['Tab'], description: 'Navigate between elements' },
       { keys: ['Shift', 'Tab'], description: 'Navigate backwards' },
       { keys: ['Space'], description: 'Activate button/control' },
-      { keys: ['Alt', 'Z'], description: 'Toggle high contrast mode' },
+      { keys: ['Alt', 'Z'], description: 'Toggle dark/light mode' },
       { keys: ['?'], description: 'Show this help dialog' },
     ]
   }
@@ -55,6 +56,7 @@ const KEYBOARD_SHORTCUTS: ShortcutCategory[] = [
 
 export const KeyboardShortcutButton: React.FC<{ className?: string }> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState(false);
+  const { theme } = useThemeStore();
   
   // Listen for global ? key press
   useEffect(() => {
@@ -89,10 +91,10 @@ export const KeyboardShortcutButton: React.FC<{ className?: string }> = ({ class
     <>
       <button
         onClick={() => setIsOpen(true)}
-        className={`p-2 rounded-lg hover:bg-slate-100 transition-colors focus-ring ${className}`}
+        className={`p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus-ring ${className}`}
         aria-label="Keyboard shortcuts"
       >
-        <Keyboard className="h-5 w-5 text-slate-600" />
+        <Keyboard className="h-5 w-5 text-slate-600 dark:text-slate-400" />
       </button>
       
       <TransitionWrapper
@@ -111,6 +113,8 @@ export const KeyboardShortcutButton: React.FC<{ className?: string }> = ({ class
 };
 
 export const KeyboardShortcutsModal: React.FC<{ onClose: () => void }> = ({ onClose }) => {
+  const { theme } = useThemeStore();
+  
   // Close on escape key
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -132,29 +136,29 @@ export const KeyboardShortcutsModal: React.FC<{ onClose: () => void }> = ({ onCl
   }, []);
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4 animate-fade-in">
+    <div className="fixed inset-0 bg-black bg-opacity-50 dark:bg-opacity-70 z-50 flex items-center justify-center p-4 animate-fade-in">
       <div 
-        className="bg-white rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden animate-slide-in-up"
+        className="bg-white dark:bg-slate-800 rounded-xl shadow-xl max-w-3xl w-full max-h-[90vh] overflow-hidden animate-slide-in-up"
         role="dialog"
         aria-modal="true"
         aria-labelledby="keyboard-shortcuts-title"
       >
-        <div className="flex items-center justify-between p-6 border-b border-slate-200">
+        <div className="flex items-center justify-between p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center space-x-3">
-            <div className="bg-teal-100 p-2 rounded-full">
-              <Keyboard className="h-5 w-5 text-teal-600" />
+            <div className="bg-teal-100 dark:bg-teal-900 p-2 rounded-full">
+              <Keyboard className="h-5 w-5 text-teal-600 dark:text-teal-400" />
             </div>
-            <h2 id="keyboard-shortcuts-title" className="text-xl font-semibold text-slate-900">
+            <h2 id="keyboard-shortcuts-title" className="text-xl font-semibold text-slate-900 dark:text-white">
               Keyboard Shortcuts
             </h2>
           </div>
           
           <button
             onClick={onClose}
-            className="p-2 rounded-lg hover:bg-slate-100 transition-colors focus-ring"
+            className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors focus-ring"
             aria-label="Close"
           >
-            <X className="h-5 w-5 text-slate-600" />
+            <X className="h-5 w-5 text-slate-600 dark:text-slate-400" />
           </button>
         </div>
         
@@ -162,19 +166,19 @@ export const KeyboardShortcutsModal: React.FC<{ onClose: () => void }> = ({ onCl
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
             {KEYBOARD_SHORTCUTS.map((category) => (
               <div key={category.name}>
-                <h3 className="text-lg font-medium text-slate-900 mb-4">{category.name}</h3>
+                <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-4">{category.name}</h3>
                 <div className="space-y-3">
                   {category.shortcuts.map((shortcut, index) => (
                     <div key={index} className="flex items-center justify-between">
-                      <span className="text-slate-700">{shortcut.description}</span>
+                      <span className="text-slate-700 dark:text-slate-300">{shortcut.description}</span>
                       <div className="flex items-center space-x-1">
                         {shortcut.keys.map((key, keyIndex) => (
                           <React.Fragment key={keyIndex}>
-                            <kbd className="px-2 py-1 bg-slate-100 border border-slate-300 rounded text-xs font-semibold text-slate-800 shadow-sm">
+                            <kbd className="px-2 py-1 bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded text-xs font-semibold text-slate-800 dark:text-slate-200 shadow-sm">
                               {key}
                             </kbd>
                             {keyIndex < shortcut.keys.length - 1 && (
-                              <span className="text-slate-400">+</span>
+                              <span className="text-slate-400 dark:text-slate-500">+</span>
                             )}
                           </React.Fragment>
                         ))}
@@ -186,22 +190,22 @@ export const KeyboardShortcutsModal: React.FC<{ onClose: () => void }> = ({ onCl
             ))}
           </div>
           
-          <div className="mt-8 p-4 bg-blue-50 rounded-lg border border-blue-200">
+          <div className="mt-8 p-4 bg-blue-50 dark:bg-blue-900/30 rounded-lg border border-blue-200 dark:border-blue-800">
             <div className="flex items-start space-x-3">
-              <Info className="h-5 w-5 text-blue-600 mt-0.5" />
+              <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
               <div>
-                <h4 className="font-medium text-blue-900 mb-1">Tip: Quick Access</h4>
-                <p className="text-sm text-blue-700">
-                  Press <kbd className="px-1.5 py-0.5 bg-white border border-blue-300 rounded text-xs font-semibold text-blue-800">?</kbd> anywhere in the application to open this shortcuts panel.
+                <h4 className="font-medium text-blue-900 dark:text-blue-100 mb-1">Tip: Quick Access</h4>
+                <p className="text-sm text-blue-700 dark:text-blue-300">
+                  Press <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-blue-300 dark:border-blue-700 rounded text-xs font-semibold text-blue-800 dark:text-blue-200">?</kbd> anywhere in the application to open this shortcuts panel.
                 </p>
               </div>
             </div>
           </div>
         </div>
         
-        <div className="p-4 border-t border-slate-200 bg-slate-50 flex justify-between items-center">
-          <div className="text-sm text-slate-500">
-            Press <kbd className="px-1.5 py-0.5 bg-white border border-slate-300 rounded text-xs font-semibold text-slate-700">Esc</kbd> to close
+        <div className="p-4 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between items-center">
+          <div className="text-sm text-slate-500 dark:text-slate-400">
+            Press <kbd className="px-1.5 py-0.5 bg-white dark:bg-slate-800 border border-slate-300 dark:border-slate-600 rounded text-xs font-semibold text-slate-700 dark:text-slate-300">Esc</kbd> to close
           </div>
           
           <button

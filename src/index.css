@@ -4,13 +4,75 @@
 
 /* Base styles */
 @layer base {
+  :root {
+    --background: 210 40% 98%;
+    --foreground: 222.2 84% 4.9%;
+    
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    
+    --primary: 174 84% 32%;
+    --primary-foreground: 210 40% 98%;
+    
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+    
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+    
+    --accent: 210 40% 96.1%;
+    --accent-foreground: 222.2 47.4% 11.2%;
+    
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 174 84% 32%;
+    
+    --radius: 0.5rem;
+  }
+  
+  .dark {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    
+    --card: 222.2 84% 9.8%;
+    --card-foreground: 210 40% 98%;
+    
+    --popover: 222.2 84% 9.8%;
+    --popover-foreground: 210 40% 98%;
+    
+    --primary: 174 84% 32%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 174 84% 32%;
+  }
+
   html {
-    @apply text-slate-900 antialiased;
+    @apply text-slate-900 dark:text-slate-100 antialiased;
     scroll-behavior: smooth;
   }
   
   body {
-    @apply bg-slate-50;
+    @apply bg-slate-50 dark:bg-slate-900;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
@@ -18,7 +80,7 @@
   
   /* Improved focus styles */
   *:focus-visible {
-    @apply outline-none ring-2 ring-teal-500 ring-offset-2;
+    @apply outline-none ring-2 ring-teal-500 ring-offset-2 dark:ring-offset-slate-900;
   }
   
   /* Scrollbar styling */
@@ -27,11 +89,11 @@
   }
   
   ::-webkit-scrollbar-track {
-    @apply bg-slate-100;
+    @apply bg-slate-100 dark:bg-slate-800;
   }
   
   ::-webkit-scrollbar-thumb {
-    @apply bg-slate-300 rounded-full hover:bg-slate-400 transition-colors;
+    @apply bg-slate-300 dark:bg-slate-600 rounded-full hover:bg-slate-400 dark:hover:bg-slate-500 transition-colors;
   }
   
   /* Print styles */
@@ -45,7 +107,7 @@
 /* Component styles */
 @layer components {
   .focus-ring {
-    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2;
+    @apply focus:outline-none focus-visible:ring-2 focus-visible:ring-teal-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900;
   }
   
   .hover-scale {
@@ -58,12 +120,12 @@
   
   /* Keyboard shortcut styling */
   kbd {
-    @apply px-1.5 py-0.5 text-xs font-semibold bg-slate-100 border border-slate-300 rounded shadow-sm text-slate-700;
+    @apply px-1.5 py-0.5 text-xs font-semibold bg-slate-100 dark:bg-slate-700 border border-slate-300 dark:border-slate-600 rounded shadow-sm text-slate-700 dark:text-slate-300;
   }
   
   /* Code block styling */
   pre {
-    @apply p-4 bg-slate-900 text-slate-100 rounded-lg overflow-x-auto;
+    @apply p-4 bg-slate-900 dark:bg-black text-slate-100 rounded-lg overflow-x-auto;
   }
   
   code {
@@ -72,23 +134,23 @@
   
   /* Markdown content styling */
   .markdown-content h1 {
-    @apply text-2xl font-bold mb-4 mt-6;
+    @apply text-2xl font-bold mb-4 mt-6 text-slate-900 dark:text-white;
   }
   
   .markdown-content h2 {
-    @apply text-xl font-bold mb-3 mt-5;
+    @apply text-xl font-bold mb-3 mt-5 text-slate-900 dark:text-white;
   }
   
   .markdown-content h3 {
-    @apply text-lg font-bold mb-3 mt-4;
+    @apply text-lg font-bold mb-3 mt-4 text-slate-900 dark:text-white;
   }
   
   .markdown-content p {
-    @apply mb-4 leading-relaxed;
+    @apply mb-4 leading-relaxed text-slate-700 dark:text-slate-300;
   }
   
   .markdown-content ul, .markdown-content ol {
-    @apply mb-4 pl-5;
+    @apply mb-4 pl-5 text-slate-700 dark:text-slate-300;
   }
   
   .markdown-content li {
@@ -96,11 +158,11 @@
   }
   
   .markdown-content a {
-    @apply text-teal-600 hover:text-teal-700 underline;
+    @apply text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 underline;
   }
   
   .markdown-content blockquote {
-    @apply pl-4 border-l-4 border-slate-300 text-slate-600 italic my-4;
+    @apply pl-4 border-l-4 border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-400 italic my-4;
   }
 }
 
