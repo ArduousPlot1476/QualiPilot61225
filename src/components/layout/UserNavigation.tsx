@@ -63,7 +63,12 @@ export const UserNavigation: React.FC = () => {
 
   const navigateToProfile = () => {
     setIsDropdownOpen(false);
-    navigate('/settings');
+    navigate('/settings/profile');
+  };
+
+  const navigateToCompanySettings = () => {
+    setIsDropdownOpen(false);
+    navigate('/settings/company');
   };
 
   if (!user) {
@@ -130,7 +135,7 @@ export const UserNavigation: React.FC = () => {
               </div>
             </div>
           </div>
-
+          
           {/* Menu Items */}
           <div className="py-2">
             <FocusableElement
@@ -144,26 +149,11 @@ export const UserNavigation: React.FC = () => {
             
             <FocusableElement
               className="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors duration-200"
-              onClick={() => {
-                setIsDropdownOpen(false);
-                navigate('/settings');
-              }}
+              onClick={navigateToCompanySettings}
               role="menuitem"
             >
               <Building className="h-4 w-4 mr-3 text-slate-500" />
               Company Settings
-            </FocusableElement>
-            
-            <FocusableElement
-              className="w-full flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-100 transition-colors duration-200"
-              onClick={() => {
-                setIsDropdownOpen(false);
-                navigate('/settings');
-              }}
-              role="menuitem"
-            >
-              <Settings className="h-4 w-4 mr-3 text-slate-500" />
-              Account Management
             </FocusableElement>
             
             <FocusableElement
@@ -191,12 +181,10 @@ export const UserNavigation: React.FC = () => {
           <div className="px-4 py-3 border-t border-slate-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-2">
-                <Shield className="h-4 w-4 text-green-500" />
-                <span className="text-xs font-medium text-slate-700">Compliance Status</span>
+                <Shield className="h-4 w-4 text-teal-600" />
+                <span className="text-xs font-medium text-slate-700">Account Status</span>
               </div>
-              <span className="text-xs font-medium text-green-600 bg-green-100 px-2 py-1 rounded-full">
-                Active
-              </span>
+              <span className="px-2 py-1 bg-green-100 text-green-800 text-xs font-medium rounded-full">Active</span>
             </div>
           </div>
 

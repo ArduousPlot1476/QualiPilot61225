@@ -23,6 +23,7 @@ const RegulatoryWizard = lazyImport(() => import('../components/onboarding/Regul
 const DocumentGenerator = lazyImport(() => import('../components/documents/DocumentGenerator'), 'DocumentGenerator');
 const RegulatoryIntelligence = lazyImport(() => import('../components/regulatory/RegulatoryIntelligence'), 'RegulatoryIntelligence');
 const ProfileSettings = lazyImport(() => import('../components/profile/ProfileSettings'), 'ProfileSettings');
+const CompanySettings = lazyImport(() => import('../components/profile/CompanySettings'), 'CompanySettings');
 
 // Loading fallback with animation
 const PageLoader = () => (
@@ -115,6 +116,21 @@ const ProfileSettingsLayout: React.FC = () => {
   );
 };
 
+const CompanySettingsLayout: React.FC = () => {
+  return (
+    <ProtectedRoute>
+      <QualiPilotInterface>
+        <SystemStatusBar />
+        <div className="h-[calc(100vh-3.5rem)] mt-14 overflow-y-auto">
+          <Suspense fallback={<PageLoader />}>
+            <CompanySettings />
+          </Suspense>
+        </div>
+      </QualiPilotInterface>
+    </ProtectedRoute>
+  );
+};
+
 export const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -133,9 +149,11 @@ export const AppRoutes = () => {
         <Route path="/documents" element={<DocumentGeneratorLayout />} />
         <Route path="/regulatory" element={<RegulatoryIntelligenceLayout />} />
         <Route path="/compliance" element={<DashboardLayout />} />
-        <Route path="/settings" element={<ProfileSettingsLayout />} />
+        <Route path="/settings/profile" element={<ProfileSettingsLayout />} />
+        <Route path="/settings/company" element={<CompanySettingsLayout />} />
         
         {/* Default Redirects */}
+        <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

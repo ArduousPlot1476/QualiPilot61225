@@ -3,8 +3,8 @@ import { User, Shield, Bell, FileText, Lock } from 'lucide-react';
 import { ProfileSettings } from './ProfileSettings';
 import { SecuritySettings } from './SecuritySettings';
 import { NotificationPreferences } from './NotificationPreferences';
-import { CompanyDocuments } from './CompanyDocuments';
 import { DataPrivacy } from './DataPrivacy';
+import { CompanySettings } from './CompanySettings';
 
 interface Tab {
   id: string;
@@ -19,7 +19,6 @@ export const ProfileSettingsTabs: React.FC = () => {
     { id: 'profile', label: 'Profile', icon: User },
     { id: 'security', label: 'Security', icon: Shield },
     { id: 'notifications', label: 'Notifications', icon: Bell },
-    { id: 'documents', label: 'Documents', icon: FileText },
     { id: 'privacy', label: 'Privacy', icon: Lock }
   ];
   
@@ -31,10 +30,10 @@ export const ProfileSettingsTabs: React.FC = () => {
         return <SecuritySettings />;
       case 'notifications':
         return <NotificationPreferences />;
-      case 'documents':
-        return <CompanyDocuments />;
       case 'privacy':
         return <DataPrivacy />;
+      case 'company':
+        return <CompanySettings />;
       default:
         return <ProfileSettings />;
     }
