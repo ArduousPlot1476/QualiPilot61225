@@ -69,22 +69,29 @@ export const ChatArea: React.FC = () => {
     if (!selectedThreadId || selectedThreadId === '1') {
       setIsCreatingThread(true);
       try {
-        const newThread = await ChatService.createThread('New Conversation');
+        // Create a default thread title
+        const defaultTitle = "New Conversation";
+        
+        // Create the thread in Supabase
+        const newThread = await ChatService.createThread(defaultTitle);
+        
         // Update the global state with the new thread ID
         setSelectedThread(newThread.id);
+        
         showToast({
           type: 'success',
           title: 'New Conversation',
           message: 'Created new conversation thread',
           duration: 2000
         });
+        
         return newThread.id;
       } catch (error) {
         console.error('Failed to create thread:', error);
         showToast({
           type: 'error',
           title: 'Thread Creation Failed',
-          message: 'Could not create new conversation',
+          message: 'Could not create new conversation. Please try again.',
           duration: 5000
         });
         throw error;
@@ -118,6 +125,12 @@ export const ChatArea: React.FC = () => {
       await sendMessage(message, threadId);
     } catch (error) {
       console.error('Failed to send message:', error);
+      showToast({
+        type: 'error',
+        title: 'Message Failed',
+        message: 'Could not send message. Please try again.',
+        duration: 5000
+      });
     }
   };
 

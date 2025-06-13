@@ -42,6 +42,51 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
     abortControllerRef.current = new AbortController();
 
     try {
+      // For the default mock thread, use a different approach
+      if (threadId === '1') {
+        // Simulate streaming for the mock thread
+        let simulatedContent = '';
+        const interval = setInterval(() => {
+          const chunks = [
+            "I'm analyzing your question about FDA regulations. ",
+            "Based on the current FDA guidelines, ",
+            "medical device manufacturers must comply with Quality System Regulations (QSR) as outlined in 21 CFR Part 820. ",
+            "This includes requirements for design controls, document controls, and risk management. ",
+            "For more specific guidance, please provide details about your device classification and intended use."
+          ];
+          
+          const currentIndex = simulatedContent.length > 0 ? 
+            Math.floor(simulatedContent.length / 20) % chunks.length : 0;
+            
+          if (currentIndex < chunks.length) {
+            const newChunk = chunks[currentIndex];
+            simulatedContent += newChunk;
+            setStreamingContent(simulatedContent);
+          } else {
+            clearInterval(interval);
+            setIsStreaming(false);
+            
+            if (onMessageComplete) {
+              onMessageComplete({
+                type: 'complete',
+                content: simulatedContent,
+                fullContent: simulatedContent,
+                confidence: 'High',
+                retrievedDocs: 3
+              });
+            }
+          }
+        }, 300);
+        
+        // Clean up interval on abort
+        abortControllerRef.current.signal.addEventListener('abort', () => {
+          clearInterval(interval);
+        });
+        
+        return;
+      }
+
+      // For real threads, use the ChatService
       await ChatService.sendMessage(threadId, message, {
         signal: abortControllerRef.current.signal,
         

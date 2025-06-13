@@ -39,6 +39,20 @@ export class ChatService {
         throw new Error('Authentication required');
       }
 
+      // Check if thread exists before sending message
+      if (threadId !== '1') { // Skip check for default mock thread
+        const { data: thread, error: threadError } = await supabase
+          .from('threads')
+          .select('id')
+          .eq('id', threadId)
+          .single();
+          
+        if (threadError) {
+          console.error('Thread check error:', threadError);
+          throw new Error('Thread not found or access denied');
+        }
+      }
+
       const response = await fetch(this.FUNCTION_URL, {
         method: 'POST',
         headers: {
@@ -146,6 +160,7 @@ export class ChatService {
         .single();
 
       if (error) {
+        console.error('Create thread error:', error);
         throw new Error(`Failed to create thread: ${error.message}`);
       }
 
