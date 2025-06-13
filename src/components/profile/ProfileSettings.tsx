@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { User, Building, Mail, Phone, MapPin, Shield, CheckCircle, AlertTriangle, Loader2, Lock, Edit2 } from 'lucide-react';
+import { User, Building, Mail, Phone, MapPin, Shield, CheckCircle, AlertTriangle, Loader2, Lock, Edit2, Home } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useToast } from '../ui/Toast';
+import { useNavigate } from 'react-router-dom';
 
 export const ProfileSettings: React.FC = () => {
   const { user, userProfile, updateProfile, updatePassword } = useAuth();
   const { showToast } = useToast();
+  const navigate = useNavigate();
   
   // Profile form state
   const [isEditingProfile, setIsEditingProfile] = useState(false);
@@ -184,12 +186,26 @@ export const ProfileSettings: React.FC = () => {
     }
   };
   
+  // Navigate to home screen
+  const handleReturnHome = () => {
+    navigate('/dashboard');
+  };
+  
   return (
     <div className="max-w-6xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-2xl font-bold text-slate-900">Profile Settings</h1>
-        <div className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
-          {user?.email}
+        <div className="flex items-center space-x-3">
+          <button
+            onClick={handleReturnHome}
+            className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+          >
+            <Home className="h-4 w-4" />
+            <span>Return to Home</span>
+          </button>
+          <div className="bg-teal-100 text-teal-800 px-3 py-1 rounded-full text-sm font-medium">
+            {user?.email}
+          </div>
         </div>
       </div>
       
