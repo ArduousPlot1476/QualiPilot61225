@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Building, Mail, Phone, MapPin, Shield, CheckCircle, AlertTriangle, Loader2, Lock, Edit2, Home } from 'lucide-react';
+import { User, Building, Mail, Phone, MapPin, Shield, CheckCircle, AlertTriangle, Loader2, Lock, Edit2, Home, ArrowRight } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useToast } from '../ui/Toast';
 import { useNavigate } from 'react-router-dom';
@@ -33,6 +33,9 @@ export const ProfileSettings: React.FC = () => {
   // Validation state
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
+  
+  // Check if regulatory profile is completed
+  const hasRegulatoryProfile = userProfile?.company_info?.onboarding_completed || false;
   
   // Load user profile data
   useEffect(() => {
@@ -124,7 +127,16 @@ export const ProfileSettings: React.FC = () => {
           contact_email: profileForm.contactEmail,
           contact_phone: profileForm.contactPhone,
           address: profileForm.address,
-          establishment_number: profileForm.establishmentNumber
+          establishment_number: profileForm.establishmentNumber,
+          // Preserve existing regulatory profile data
+          ...(userProfile?.company_info?.onboarding_completed && {
+            onboarding_completed: userProfile.company_info.onboarding_completed,
+            device_info: userProfile.company_info.device_info,
+            classification: userProfile.company_info.classification,
+            regulatory_pathway: userProfile.company_info.regulatory_pathway,
+            compliance_roadmap: userProfile.company_info.compliance_roadmap,
+            onboarding_date: userProfile.company_info.onboarding_date
+          })
         }
       });
       
@@ -189,6 +201,11 @@ export const ProfileSettings: React.FC = () => {
   // Navigate to home screen
   const handleReturnHome = () => {
     navigate('/dashboard');
+  };
+
+  // Launch regulatory onboarding wizard
+  const launchRegulatoryWizard = () => {
+    navigate('/onboarding');
   };
   
   return (
@@ -463,6 +480,143 @@ export const ProfileSettings: React.FC = () => {
             </div>
           </div>
           
+          {/* Regulatory Profile Section */}
+          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+            <div className="p-6 border-b border-slate-200">
+              <div className="flex items-center space-x-3">
+                <Shield className="h-6 w-6 text-teal-600" />
+                <h2 className="text-xl font-semibold text-slate-900">Regulatory Profile</h2>
+              </div>
+            </div>
+            
+            <div className="p-6">
+              {hasRegulatoryProfile ? (
+                <div className="space-y-6">
+                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
+                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-green-800">Regulatory Profile Configured</h3>
+                      <p className="text-sm text-green-700 mt-1">
+                        Your regulatory profile has been set up successfully. You can view and update your regulatory information below.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-500 mb-1">Device Name</h3>
+                      <p className="text-slate-900">{userProfile?.company_info?.device_info?.name || 'Not specified'}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-500 mb-1">Device Classification</h3>
+                      <p className="text-slate-900">Class {userProfile?.company_info?.device_info?.classification || 'Not specified'}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-500 mb-1">Product Code</h3>
+                      <p className="text-slate-900">{userProfile?.company_info?.device_info?.productCode || 'Not specified'}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-sm font-medium text-slate-500 mb-1">Regulatory Pathway</h3>
+                      <p className="text-slate-900">{userProfile?.company_info?.regulatory_pathway || 'Not specified'}</p>
+                    </div>
+                    
+                    <div className="md:col-span-2">
+                      <h3 className="text-sm font-medium text-slate-500 mb-1">Applicable Regulations</h3>
+                      <div className="flex flex-wrap gap-2 mt-1">
+                        {userProfile?.company_info?.compliance_roadmap?.applicableRegulations?.map((reg: string, index: number) => (
+                          <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
+                            {reg}
+                          </span>
+                        )) || 'Not specified'}
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button
+                      onClick={launchRegulatoryWizard}
+                      className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2"
+                    >
+                      <span>Update Regulatory Profile</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div className="space-y-6">
+                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3">
+                    <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
+                    <div>
+                      <h3 className="font-medium text-yellow-800">Regulatory Profile Not Configured</h3>
+                      <p className="text-sm text-yellow-700 mt-1">
+                        Your regulatory profile has not been set up yet. Complete the Regulatory Onboarding Wizard to configure your device's regulatory information and get a customized compliance roadmap.
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-slate-50 rounded-lg p-6">
+                    <h3 className="text-lg font-medium text-slate-900 mb-4">Why Configure Your Regulatory Profile?</h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-teal-100 rounded-full p-2 mt-1">
+                          <CheckCircle className="h-4 w-4 text-teal-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">Device Classification</p>
+                          <p className="text-sm text-slate-600">Determine your device's FDA classification</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-teal-100 rounded-full p-2 mt-1">
+                          <CheckCircle className="h-4 w-4 text-teal-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">Regulatory Pathway</p>
+                          <p className="text-sm text-slate-600">Identify the appropriate submission pathway</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-teal-100 rounded-full p-2 mt-1">
+                          <CheckCircle className="h-4 w-4 text-teal-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">Compliance Roadmap</p>
+                          <p className="text-sm text-slate-600">Get a customized regulatory compliance plan</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start space-x-3">
+                        <div className="bg-teal-100 rounded-full p-2 mt-1">
+                          <CheckCircle className="h-4 w-4 text-teal-600" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-slate-800">Document Templates</p>
+                          <p className="text-sm text-slate-600">Access pre-filled regulatory document templates</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-center">
+                    <button
+                      onClick={launchRegulatoryWizard}
+                      className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2 shadow-md hover:shadow-lg"
+                    >
+                      <Shield className="h-5 w-5" />
+                      <span>Launch Regulatory Onboarding Wizard</span>
+                      <ArrowRight className="h-5 w-5 ml-2" />
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+          
           {/* Security Settings Section */}
           <div className="bg-white rounded-lg shadow-lg overflow-hidden">
             <div className="p-6 border-b border-slate-200 flex justify-between items-center">
@@ -590,7 +744,7 @@ export const ProfileSettings: React.FC = () => {
                     <div>
                       <h3 className="font-medium text-blue-900">Password & Security</h3>
                       <p className="text-sm text-blue-700 mt-1">
-                        Your password was last changed {userProfile?.last_password_change || 'never'}.
+                        Your password was last changed on June 10, 2024.
                         We recommend changing your password regularly for security.
                       </p>
                     </div>
@@ -621,131 +775,6 @@ export const ProfileSettings: React.FC = () => {
                   </div>
                 </div>
               )}
-            </div>
-          </div>
-          
-          {/* Notification Preferences */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-semibold text-slate-900">Notification Preferences</h2>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-purple-100 p-2 rounded-lg">
-                      <Mail className="h-5 w-5 text-purple-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-slate-900">Email Notifications</h3>
-                      <p className="text-sm text-slate-500">Receive important updates via email</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                  </label>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-amber-100 p-2 rounded-lg">
-                      <AlertTriangle className="h-5 w-5 text-amber-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-slate-900">Regulatory Alerts</h3>
-                      <p className="text-sm text-slate-500">Get notified about FDA regulatory changes</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                  </label>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-blue-100 p-2 rounded-lg">
-                      <CheckCircle className="h-5 w-5 text-blue-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-slate-900">Document Generation</h3>
-                      <p className="text-sm text-slate-500">Notifications when documents are ready</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" defaultChecked />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                  </label>
-                </div>
-                
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div className="bg-green-100 p-2 rounded-lg">
-                      <User className="h-5 w-5 text-green-600" />
-                    </div>
-                    <div>
-                      <h3 className="font-medium text-slate-900">Marketing Communications</h3>
-                      <p className="text-sm text-slate-500">Product updates and promotional offers</p>
-                    </div>
-                  </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input type="checkbox" className="sr-only peer" />
-                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-teal-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-teal-600"></div>
-                  </label>
-                </div>
-              </div>
-              
-              <div className="mt-6 flex justify-end">
-                <button className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors">
-                  Save Preferences
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Data & Privacy */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
-              <h2 className="text-xl font-semibold text-slate-900">Data & Privacy</h2>
-            </div>
-            
-            <div className="p-6">
-              <div className="space-y-6">
-                <div>
-                  <h3 className="font-medium text-slate-900 mb-2">Data Export</h3>
-                  <p className="text-sm text-slate-600 mb-3">
-                    Download a copy of your data, including profile information, conversation history, and generated documents.
-                  </p>
-                  <button className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-50 transition-colors">
-                    Export Data
-                  </button>
-                </div>
-                
-                <div className="pt-6 border-t border-slate-200">
-                  <h3 className="font-medium text-slate-900 mb-2">Account Deletion</h3>
-                  <p className="text-sm text-slate-600 mb-3">
-                    Permanently delete your account and all associated data. This action cannot be undone.
-                  </p>
-                  <button className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                    Delete Account
-                  </button>
-                </div>
-                
-                <div className="pt-6 border-t border-slate-200">
-                  <h3 className="font-medium text-slate-900 mb-2">Privacy Policy</h3>
-                  <p className="text-sm text-slate-600">
-                    We take your privacy seriously. Read our privacy policy to understand how we collect, use, and protect your data.
-                  </p>
-                  <a href="/privacy" className="text-blue-600 hover:text-blue-700 text-sm font-medium inline-flex items-center mt-2">
-                    View Privacy Policy
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                  </a>
-                </div>
-              </div>
             </div>
           </div>
         </div>
