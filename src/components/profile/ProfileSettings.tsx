@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Building, Mail, Phone, MapPin, Shield, CheckCircle, AlertTriangle, Loader2, Lock, Edit2, Home, ArrowRight } from 'lucide-react';
+import { User, Building, Mail, Phone, MapPin, Shield, CheckCircle, AlertTriangle, Loader2, Lock, Edit2, Home } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useToast } from '../ui/Toast';
 import { useNavigate } from 'react-router-dom';
@@ -33,9 +33,6 @@ export const ProfileSettings: React.FC = () => {
   // Validation state
   const [profileErrors, setProfileErrors] = useState<Record<string, string>>({});
   const [passwordErrors, setPasswordErrors] = useState<Record<string, string>>({});
-  
-  // Check if regulatory profile is completed
-  const hasRegulatoryProfile = userProfile?.company_info?.onboarding_completed || false;
   
   // Load user profile data
   useEffect(() => {
@@ -201,11 +198,6 @@ export const ProfileSettings: React.FC = () => {
   // Navigate to home screen
   const handleReturnHome = () => {
     navigate('/dashboard');
-  };
-
-  // Launch regulatory onboarding wizard
-  const launchRegulatoryWizard = () => {
-    navigate('/onboarding');
   };
   
   return (
@@ -474,143 +466,6 @@ export const ProfileSettings: React.FC = () => {
                       <h3 className="text-sm font-medium text-slate-500 mb-1">Business Address</h3>
                       <p className="text-slate-900 whitespace-pre-line">{userProfile?.company_info?.address || 'Not specified'}</p>
                     </div>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Regulatory Profile Section */}
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-slate-200">
-              <div className="flex items-center space-x-3">
-                <Shield className="h-6 w-6 text-teal-600" />
-                <h2 className="text-xl font-semibold text-slate-900">Regulatory Profile</h2>
-              </div>
-            </div>
-            
-            <div className="p-6">
-              {hasRegulatoryProfile ? (
-                <div className="space-y-6">
-                  <div className="bg-green-50 border border-green-200 rounded-lg p-4 flex items-start space-x-3">
-                    <CheckCircle className="h-5 w-5 text-green-500 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium text-green-800">Regulatory Profile Configured</h3>
-                      <p className="text-sm text-green-700 mt-1">
-                        Your regulatory profile has been set up successfully. You can view and update your regulatory information below.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-500 mb-1">Device Name</h3>
-                      <p className="text-slate-900">{userProfile?.company_info?.device_info?.name || 'Not specified'}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-500 mb-1">Device Classification</h3>
-                      <p className="text-slate-900">Class {userProfile?.company_info?.device_info?.classification || 'Not specified'}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-500 mb-1">Product Code</h3>
-                      <p className="text-slate-900">{userProfile?.company_info?.device_info?.productCode || 'Not specified'}</p>
-                    </div>
-                    
-                    <div>
-                      <h3 className="text-sm font-medium text-slate-500 mb-1">Regulatory Pathway</h3>
-                      <p className="text-slate-900">{userProfile?.company_info?.regulatory_pathway || 'Not specified'}</p>
-                    </div>
-                    
-                    <div className="md:col-span-2">
-                      <h3 className="text-sm font-medium text-slate-500 mb-1">Applicable Regulations</h3>
-                      <div className="flex flex-wrap gap-2 mt-1">
-                        {userProfile?.company_info?.compliance_roadmap?.applicableRegulations?.map((reg: string, index: number) => (
-                          <span key={index} className="px-2 py-1 bg-blue-100 text-blue-800 rounded-full text-xs font-medium">
-                            {reg}
-                          </span>
-                        )) || 'Not specified'}
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-end">
-                    <button
-                      onClick={launchRegulatoryWizard}
-                      className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2"
-                    >
-                      <span>Update Regulatory Profile</span>
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4 flex items-start space-x-3">
-                    <AlertTriangle className="h-5 w-5 text-yellow-500 mt-0.5" />
-                    <div>
-                      <h3 className="font-medium text-yellow-800">Regulatory Profile Not Configured</h3>
-                      <p className="text-sm text-yellow-700 mt-1">
-                        Your regulatory profile has not been set up yet. Complete the Regulatory Onboarding Wizard to configure your device's regulatory information and get a customized compliance roadmap.
-                      </p>
-                    </div>
-                  </div>
-                  
-                  <div className="bg-slate-50 rounded-lg p-6">
-                    <h3 className="text-lg font-medium text-slate-900 mb-4">Why Configure Your Regulatory Profile?</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-teal-100 rounded-full p-2 mt-1">
-                          <CheckCircle className="h-4 w-4 text-teal-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-800">Device Classification</p>
-                          <p className="text-sm text-slate-600">Determine your device's FDA classification</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-teal-100 rounded-full p-2 mt-1">
-                          <CheckCircle className="h-4 w-4 text-teal-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-800">Regulatory Pathway</p>
-                          <p className="text-sm text-slate-600">Identify the appropriate submission pathway</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-teal-100 rounded-full p-2 mt-1">
-                          <CheckCircle className="h-4 w-4 text-teal-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-800">Compliance Roadmap</p>
-                          <p className="text-sm text-slate-600">Get a customized regulatory compliance plan</p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start space-x-3">
-                        <div className="bg-teal-100 rounded-full p-2 mt-1">
-                          <CheckCircle className="h-4 w-4 text-teal-600" />
-                        </div>
-                        <div>
-                          <p className="font-medium text-slate-800">Document Templates</p>
-                          <p className="text-sm text-slate-600">Access pre-filled regulatory document templates</p>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="flex justify-center">
-                    <button
-                      onClick={launchRegulatoryWizard}
-                      className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2 shadow-md hover:shadow-lg"
-                    >
-                      <Shield className="h-5 w-5" />
-                      <span>Launch Regulatory Onboarding Wizard</span>
-                      <ArrowRight className="h-5 w-5 ml-2" />
-                    </button>
                   </div>
                 </div>
               )}
