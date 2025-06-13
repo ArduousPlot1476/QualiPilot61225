@@ -1,5 +1,5 @@
 import React, { useCallback, useRef, useState } from 'react';
-import { ExternalLink, FileText, Bot, User, MessageSquare } from 'lucide-react';
+import { ExternalLink, FileText, Bot, User, MessageSquare, Download } from 'lucide-react';
 import { ChatMessage } from '../../types';
 import { MessageStatus, MessageListSkeleton } from '../ui/LoadingStates';
 import { useOptimisticUpdates } from '../../hooks/useOptimisticUpdates';
@@ -163,11 +163,11 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
                   {/* Avatar */}
                   <div className={`flex-shrink-0 ${isUser ? 'ml-3' : 'mr-3'}`}>
                     {isUser ? (
-                      <div className="bg-slate-300 rounded-full p-2 hover-scale transition-transform-150">
-                        <User className="h-4 w-4 text-slate-600" />
+                      <div className="bg-slate-300 dark:bg-slate-600 rounded-full p-2 hover-scale transition-transform-150">
+                        <User className="h-4 w-4 text-slate-600 dark:text-slate-300" />
                       </div>
                     ) : (
-                      <div className="bg-teal-600 rounded-full p-2 hover-scale transition-transform-150">
+                      <div className="bg-teal-600 dark:bg-teal-700 rounded-full p-2 hover-scale transition-transform-150">
                         <Bot className="h-4 w-4 text-white" />
                       </div>
                     )}
@@ -178,8 +178,8 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
                     <div
                       className={`
                         ${isUser 
-                          ? 'bg-teal-600 text-white' 
-                          : 'bg-white border border-slate-200'
+                          ? 'bg-teal-600 dark:bg-teal-700 text-white' 
+                          : 'bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700'
                         } 
                         rounded-lg px-4 py-3 shadow-sm
                         ${isOptimisticMessage ? 'opacity-75 border-dashed' : ''}
@@ -196,7 +196,7 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
                         )}
                         
                         <div className={`text-xs mt-2 flex items-center justify-between ${
-                          isUser ? 'text-teal-200' : 'text-slate-400'
+                          isUser ? 'text-teal-200 dark:text-teal-300' : 'text-slate-400 dark:text-slate-500'
                         }`}>
                           <span>{formatTimestamp(message.timestamp)}</span>
                           {isUser && (
@@ -222,30 +222,37 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
 
                     {/* Generated Document Card */}
                     {message.documentCard && (
-                      <div className="p-3 bg-lime-50 border border-lime-200 rounded-lg hover-lift transition-all-300">
+                      <div className="p-3 bg-lime-50 dark:bg-lime-900/20 border border-lime-200 dark:border-lime-800 rounded-lg hover-lift transition-all-300">
                         <div className="flex items-center gap-2">
-                          <FileText className="h-4 w-4 text-lime-600" />
-                          <span className="font-medium text-slate-900">
+                          <FileText className="h-4 w-4 text-lime-600 dark:text-lime-400" />
+                          <span className="font-medium text-slate-900 dark:text-white">
                             {message.documentCard.title}
                           </span>
                           <span className={`px-2 py-1 text-xs font-medium rounded-full ${
                             message.documentCard.status === 'ready' 
-                              ? 'bg-green-100 text-green-800' 
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-200' 
                               : message.documentCard.status === 'generating'
-                              ? 'bg-yellow-100 text-yellow-800'
-                              : 'bg-red-100 text-red-800'
+                              ? 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-800 dark:text-yellow-200'
+                              : 'bg-red-100 dark:bg-red-900/30 text-red-800 dark:text-red-200'
                           }`}>
                             {message.documentCard.status === 'ready' ? 'Ready' : 
                              message.documentCard.status === 'generating' ? 'Generating...' : 'Error'}
                           </span>
                         </div>
-                        <p className="text-sm text-slate-600 mt-1">
+                        <p className="text-sm text-slate-600 dark:text-slate-300 mt-1">
                           {message.documentCard.description}
                         </p>
                         {message.documentCard.status === 'ready' && (
-                          <button className="block mt-2 text-sm font-medium text-teal-600 hover:text-teal-700 transition-colors duration-200 focus-ring rounded-lg px-2 py-1">
-                            View Document →
-                          </button>
+                          <div className="flex justify-between items-center mt-2">
+                            <button className="text-sm font-medium text-teal-600 dark:text-teal-400 hover:text-teal-700 dark:hover:text-teal-300 transition-colors duration-200 focus-ring rounded-lg px-2 py-1 flex items-center">
+                              <Eye className="h-3.5 w-3.5 mr-1" />
+                              View Document
+                            </button>
+                            <button className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 transition-colors duration-200 focus-ring rounded-lg px-2 py-1 flex items-center">
+                              <Download className="h-3.5 w-3.5 mr-1" />
+                              Download
+                            </button>
+                          </div>
                         )}
                       </div>
                     )}
@@ -272,7 +279,7 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
             scrollToIndex(optimisticMessages.length - 1, 'smooth');
             setHasScrolled(false);
           }}
-          className="fixed bottom-24 right-8 bg-teal-600 text-white rounded-full p-3 shadow-lg hover:bg-teal-700 transition-colors focus-ring z-10"
+          className="fixed bottom-24 right-8 bg-teal-600 dark:bg-teal-700 text-white rounded-full p-3 shadow-lg hover:bg-teal-700 dark:hover:bg-teal-600 transition-colors focus-ring z-10"
           aria-label="Scroll to bottom"
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -283,7 +290,7 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
 
       {/* Scrolling indicator */}
       {isScrolling && !initialLoad && (
-        <div className="fixed bottom-24 left-8 bg-slate-800 bg-opacity-80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg animate-fade-in">
+        <div className="fixed bottom-24 left-8 bg-slate-800 dark:bg-slate-700 bg-opacity-80 dark:bg-opacity-80 text-white px-3 py-1.5 rounded-full text-xs font-medium shadow-lg animate-fade-in">
           Scrolling...
         </div>
       )}
