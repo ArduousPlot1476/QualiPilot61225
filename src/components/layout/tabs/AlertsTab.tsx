@@ -1,19 +1,48 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle, Clock, Shield } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Shield, Bell } from 'lucide-react';
 import { useAppStore } from '../../../store/appStore';
 import { EmptyState } from '../../ui/EmptyState';
+import { useAuth } from '../../auth/AuthProvider';
+import { fetchInitialAlerts, markAlertAsReadInDB } from '../../../lib/realtime/alertSubscription';
+import { useToast } from '../../ui/Toast';
 
 export const AlertsTab: React.FC = () => {
   const { alerts, markAlertAsRead } = useAppStore();
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useAuth();
+  const { showToast } = useToast();
 
-  // Simulate loading delay for demonstration
+  // Load alerts when component mounts
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setIsLoading(false);
-    }, 600);
-    return () => clearTimeout(timer);
-  }, []);
+    const loadAlerts = async () => {
+      if (!user) return;
+      
+      try {
+        setIsLoading(true);
+        const initialAlerts = await fetchInitialAlerts(user.id);
+        
+        // Update the store with the fetched alerts
+        initialAlerts.forEach(alert => {
+          // Only add if not already in the store
+          if (!alerts.some(a => a.id === alert.id)) {
+            useAppStore.getState().addAlert(alert);
+          }
+        });
+      } catch (error) {
+        console.error('Failed to load alerts:', error);
+        showToast({
+          type: 'error',
+          title: 'Failed to Load Alerts',
+          message: 'Could not retrieve your regulatory alerts',
+          duration: 5000
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadAlerts();
+  }, [user, showToast]);
 
   const getAlertIcon = (type: string) => {
     switch (type) {
@@ -48,6 +77,24 @@ export const AlertsTab: React.FC = () => {
     if (minutes < 60) return `${minutes}m ago`;
     if (hours < 24) return `${hours}h ago`;
     return `${days}d ago`;
+  };
+
+  const handleMarkAsRead = async (alertId: string) => {
+    try {
+      // First update the UI optimistically
+      markAlertAsRead(alertId);
+      
+      // Then update the database
+      await markAlertAsReadInDB(alertId);
+    } catch (error) {
+      console.error('Failed to mark alert as read:', error);
+      showToast({
+        type: 'error',
+        title: 'Action Failed',
+        message: 'Could not mark alert as read',
+        duration: 3000
+      });
+    }
   };
 
   if (isLoading) {
@@ -94,7 +141,7 @@ export const AlertsTab: React.FC = () => {
       <div className="space-y-3">
         {alerts.length === 0 ? (
           <EmptyState
-            icon={AlertTriangle}
+            icon={Bell}
             title="No alerts"
             description="You're all caught up! Alerts will appear here when there are regulatory updates or compliance issues."
           />
@@ -105,7 +152,7 @@ export const AlertsTab: React.FC = () => {
               className={`rounded-lg p-4 border transition-all duration-200 cursor-pointer ${
                 alert.isRead ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700' : getAlertColor(alert.type)
               }`}
-              onClick={() => !alert.isRead && markAlertAsRead(alert.id)}
+              onClick={() => !alert.isRead && handleMarkAsRead(alert.id)}
             >
               <div className="flex items-start space-x-3">
                 <div className="flex-shrink-0 mt-0.5">

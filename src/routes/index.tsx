@@ -16,6 +16,7 @@ const ResetPasswordPage = React.lazy(() => import('../components/auth/ResetPassw
 const SignupSuccessPage = React.lazy(() => import('../components/auth/SignupSuccessPage').then(module => ({ default: module.SignupSuccessPage })));
 const LandingPage = React.lazy(() => import('../pages/LandingPage').then(module => ({ default: module.LandingPage })));
 const OnboardingRedirect = React.lazy(() => import('../pages/OnboardingRedirect').then(module => ({ default: module.OnboardingRedirect })));
+const TestAlertsPage = React.lazy(() => import('../pages/TestAlertsPage').then(module => ({ default: module.TestAlertsPage })));
 
 // Lazy load feature modules
 const ChatArea = lazyImport(() => import('../components/layout/ChatArea'), 'ChatArea');
@@ -149,6 +150,21 @@ const FileUploadLayout: React.FC = () => {
   );
 };
 
+const TestAlertsLayout: React.FC = () => {
+  return (
+    <ProtectedRoute>
+      <QualiPilotInterface>
+        <SystemStatusBar />
+        <div className="h-[calc(100vh-3.5rem)] mt-14 overflow-y-auto">
+          <Suspense fallback={<PageLoader />}>
+            <TestAlertsPage />
+          </Suspense>
+        </div>
+      </QualiPilotInterface>
+    </ProtectedRoute>
+  );
+};
+
 export const AppRoutes = () => {
   return (
     <Suspense fallback={<PageLoader />}>
@@ -174,6 +190,7 @@ export const AppRoutes = () => {
         <Route path="/settings/profile" element={<ProfileSettingsLayout />} />
         <Route path="/settings/company" element={<CompanySettingsLayout />} />
         <Route path="/upload" element={<FileUploadLayout />} />
+        <Route path="/test-alerts" element={<TestAlertsLayout />} />
         
         {/* Default Redirects */}
         <Route path="/settings" element={<Navigate to="/settings/profile" replace />} />
