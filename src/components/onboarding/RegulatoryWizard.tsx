@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ChevronRight, ChevronLeft, CheckCircle, Building, FileText, AlertTriangle } from 'lucide-react';
+import { Shield, ChevronRight, ChevronLeft, CheckCircle, Building, FileText, AlertTriangle, Home } from 'lucide-react';
 import { CompanyInformationForm } from './CompanyInformationForm';
 import { DeviceClassificationForm } from './DeviceClassificationForm';
 import { RegulatoryPathwayCard } from './RegulatoryPathwayCard';
@@ -205,6 +205,11 @@ export const RegulatoryWizard: React.FC = () => {
     });
   };
 
+  // Return to home/dashboard
+  const handleReturnHome = () => {
+    navigate('/dashboard');
+  };
+
   const generateComplianceRoadmap = (deviceClass: string, pathway: string) => {
     // This would typically come from an API, but we'll mock it for now
     return {
@@ -353,11 +358,23 @@ export const RegulatoryWizard: React.FC = () => {
       <div className="bg-white rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
         <div className="p-6 border-b border-slate-200">
-          <div className="flex items-center space-x-3">
-            <div className="bg-teal-600 rounded-full p-2">
-              <Shield className="h-6 w-6 text-white" />
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="bg-teal-600 rounded-full p-2">
+                <Shield className="h-6 w-6 text-white" />
+              </div>
+              <h2 className="text-2xl font-bold text-slate-900">Regulatory Onboarding Wizard</h2>
             </div>
-            <h2 className="text-2xl font-bold text-slate-900">Regulatory Onboarding Wizard</h2>
+            
+            {/* Return to Home Button */}
+            <button
+              onClick={handleReturnHome}
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+              title="Return to Dashboard"
+            >
+              <Home className="h-4 w-4" />
+              <span>Return to Dashboard</span>
+            </button>
           </div>
           <p className="text-slate-600 mt-2">
             Complete this step-by-step wizard to set up your regulatory profile and get a customized compliance roadmap.
