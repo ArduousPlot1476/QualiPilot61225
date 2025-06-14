@@ -229,11 +229,11 @@ export const RegulatoryWizard: React.FC = () => {
       // Update the profile with a timeout to prevent hanging
       const updatePromise = updateProfile(regulatoryProfile);
       
-      // Set a timeout to prevent infinite loading
+      // Set a timeout to prevent infinite loading - increased to 20 seconds
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => {
-          reject(new Error('Profile update timed out after 10 seconds'));
-        }, 10000);
+          reject(new Error('Profile update timed out after 20 seconds'));
+        }, 20000);
       });
       
       // Race the update against the timeout
