@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ChevronRight, ChevronLeft, CheckCircle, Building, FileText, AlertTriangle, Home } from 'lucide-react';
+import { Shield, ChevronRight, ChevronLeft, CheckCircle, Building, FileText, AlertTriangle, Home, Info } from 'lucide-react';
 import { CompanyInformationForm } from './CompanyInformationForm';
 import { DeviceClassificationForm } from './DeviceClassificationForm';
 import { RegulatoryPathwayCard } from './RegulatoryPathwayCard';
@@ -151,7 +151,10 @@ export const RegulatoryWizard: React.FC = () => {
         onboarding_date: new Date().toISOString()
       };
       
-      await updateProfile({ company_info: regulatoryProfile });
+      await updateProfile({ 
+        company_info: regulatoryProfile,
+        regulatory_profile_completed: true
+      });
       
       showToast({
         type: 'success',
@@ -305,8 +308,8 @@ export const RegulatoryWizard: React.FC = () => {
       case 2:
         return (
           <div className="space-y-6">
-            <h3 className="text-xl font-semibold text-slate-900">Select Regulatory Pathway</h3>
-            <p className="text-slate-600">
+            <h3 className="text-xl font-semibold text-slate-900 dark:text-white">Select Regulatory Pathway</h3>
+            <p className="text-slate-600 dark:text-slate-300">
               Based on your device classification (Class {deviceClassification?.device_class}), 
               select the appropriate regulatory pathway:
             </p>
@@ -355,50 +358,50 @@ export const RegulatoryWizard: React.FC = () => {
 
   return (
     <div className="max-w-6xl mx-auto p-6">
-      <div className="bg-white rounded-lg shadow-lg overflow-hidden">
+      <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
         {/* Header */}
-        <div className="p-6 border-b border-slate-200">
+        <div className="p-6 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-teal-600 rounded-full p-2">
+              <div className="bg-teal-600 dark:bg-teal-700 rounded-full p-2">
                 <Shield className="h-6 w-6 text-white" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-900">Regulatory Onboarding Wizard</h2>
+              <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Regulatory Onboarding Wizard</h2>
             </div>
             
             {/* Return to Home Button */}
             <button
               onClick={handleReturnHome}
-              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm hover:shadow-md"
+              className="flex items-center space-x-2 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors shadow-sm hover:shadow-md"
               title="Return to Dashboard"
             >
               <Home className="h-4 w-4" />
               <span>Return to Dashboard</span>
             </button>
           </div>
-          <p className="text-slate-600 mt-2">
+          <p className="text-slate-600 dark:text-slate-300 mt-2">
             Complete this step-by-step wizard to set up your regulatory profile and get a customized compliance roadmap.
           </p>
         </div>
 
         {/* Progress Steps */}
-        <div className="px-6 py-4 bg-slate-50 border-b border-slate-200">
+        <div className="px-6 py-4 bg-slate-50 dark:bg-slate-900 border-b border-slate-200 dark:border-slate-700">
           <div className="flex items-center w-full">
             {STEPS.map((step, index) => (
               <React.Fragment key={step.id}>
                 <div className={`flex flex-col items-center ${
                   index === currentStep 
-                    ? 'text-teal-600' 
+                    ? 'text-teal-600 dark:text-teal-400' 
                     : index < currentStep 
-                    ? 'text-slate-600' 
-                    : 'text-slate-400'
+                    ? 'text-slate-600 dark:text-slate-300' 
+                    : 'text-slate-400 dark:text-slate-500'
                 }`}>
                   <div className={`flex items-center justify-center w-8 h-8 rounded-full ${
                     index === currentStep 
-                      ? 'bg-teal-100 border-2 border-teal-500' 
+                      ? 'bg-teal-100 dark:bg-teal-900/50 border-2 border-teal-500 dark:border-teal-400' 
                       : index < currentStep 
-                      ? 'bg-teal-500 text-white' 
-                      : 'bg-slate-200'
+                      ? 'bg-teal-500 dark:bg-teal-600 text-white' 
+                      : 'bg-slate-200 dark:bg-slate-700'
                   }`}>
                     {index < currentStep ? (
                       <CheckCircle className="h-5 w-5" />
@@ -410,7 +413,7 @@ export const RegulatoryWizard: React.FC = () => {
                 </div>
                 {index < STEPS.length - 1 && (
                   <div className={`flex-1 h-0.5 mx-2 ${
-                    index < currentStep ? 'bg-teal-500' : 'bg-slate-200'
+                    index < currentStep ? 'bg-teal-500 dark:bg-teal-600' : 'bg-slate-200 dark:bg-slate-700'
                   }`} />
                 )}
               </React.Fragment>
@@ -424,11 +427,11 @@ export const RegulatoryWizard: React.FC = () => {
         </div>
 
         {/* Navigation Buttons */}
-        <div className="p-6 border-t border-slate-200 bg-slate-50 flex justify-between">
+        <div className="p-6 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900 flex justify-between">
           <button
             onClick={() => setCurrentStep(prev => Math.max(0, prev - 1))}
             disabled={currentStep === 0 || isLoading}
-            className="px-4 py-2 border border-slate-300 text-slate-700 rounded-lg hover:bg-slate-100 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="px-4 py-2 border border-slate-300 dark:border-slate-600 text-slate-700 dark:text-slate-300 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
           >
             <ChevronLeft className="h-4 w-4" />
             <span>Previous</span>
@@ -456,7 +459,7 @@ export const RegulatoryWizard: React.FC = () => {
                 (currentStep === 2 && !selectedPathway) || // Pathway selection required
                 isLoading
               }
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-teal-600 dark:bg-teal-700 text-white rounded-lg hover:bg-teal-700 dark:hover:bg-teal-600 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <span>Next</span>
               <ChevronRight className="h-4 w-4" />
@@ -465,7 +468,7 @@ export const RegulatoryWizard: React.FC = () => {
             <button
               onClick={handleFinish}
               disabled={isLoading}
-              className="px-4 py-2 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-4 py-2 bg-teal-600 dark:bg-teal-700 text-white rounded-lg hover:bg-teal-700 dark:hover:bg-teal-600 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isLoading ? (
                 <>
@@ -484,12 +487,12 @@ export const RegulatoryWizard: React.FC = () => {
       </div>
       
       {/* Help Information */}
-      <div className="mt-6 bg-blue-50 border border-blue-200 rounded-lg p-4">
+      <div className="mt-6 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
         <div className="flex items-start space-x-3">
-          <AlertTriangle className="h-5 w-5 text-blue-600 mt-0.5" />
+          <Info className="h-5 w-5 text-blue-600 dark:text-blue-400 mt-0.5" />
           <div>
-            <h3 className="font-medium text-blue-900">Need Help?</h3>
-            <p className="text-sm text-blue-700 mt-1">
+            <h3 className="font-medium text-blue-900 dark:text-blue-100">Need Help?</h3>
+            <p className="text-sm text-blue-700 dark:text-blue-300 mt-1">
               This wizard will guide you through the regulatory setup process for your medical device. 
               If you need assistance, contact our support team or consult the FDA guidance documents.
             </p>

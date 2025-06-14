@@ -34,6 +34,7 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+  // Auth state
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [userProfile, setUserProfile] = useState<any | null>(null);
@@ -95,7 +96,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
 
           if (session?.user) {
             try {
+              console.log('User signed in, loading profile for:', session.user.id);
               await loadUserProfile(session.user.id, session.user.email);
+              
+              // Redirect to onboarding if needed
+              const currentPath = location.pathname;
+              if (currentPath === '/auth/login' || currentPath === '/auth/signup' || currentPath === '/') {
+                navigate('/welcome');
+              }
             } catch (profileError) {
               console.warn('Could not load user profile:', profileError);
               // Don't fail the auth flow if profile loading fails
@@ -174,10 +182,37 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       console.log('Attempting to get user profile from database...');
       const profile = await dbHelpers.getUserProfile(userId);
       console.log('User profile retrieved:', profile);
-      setUserProfile(profile);
-      console.log('User profile set in state successfully');
+      
+      if (profile) {
+        setUserProfile(profile);
+        console.log('User profile set in state successfully');
+        return;
+      }
+      
+      // If profile is null, create a new one
+      console.log('User profile not found, creating new profile...');
+      
+      // Create a basic user profile if it doesn't exist
+      try {
+        const email = userEmail || '';
+        if (!email) {
+          throw new Error('User email is required to create profile');
+        }
+        
+        const companyInfo = {};
+        console.log('Creating new user profile with email:', email);
+        
+        const newProfile = await dbHelpers.createUserProfile(userId, email, companyInfo);
+        console.log('New profile created:', newProfile);
+        setUserProfile(newProfile);
+        console.log('Created new user profile successfully');
+      } catch (createError) {
+        console.error('Failed to create user profile:', createError);
+        // This is a critical error as it will prevent thread creation
+        throw new Error('Failed to create user profile. Please try signing in again.');
+      }
     } catch (error) {
-      console.log('User profile not found, creating new profile...', error);
+      console.log('Error loading user profile:', error);
       
       // Create a basic user profile if it doesn't exist
       try {
