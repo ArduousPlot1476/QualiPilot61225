@@ -115,6 +115,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
             
             if (event === 'SIGNED_IN' && session?.user) {
               try {
+                console.log('User signed in, loading profile for:', session.user.id);
                 await loadUserProfile(session.user.id, session.user.email);
                 
                 // Redirect to onboarding if needed
@@ -167,11 +168,16 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   }, [navigate, location.pathname]);
 
   const loadUserProfile = async (userId: string, userEmail?: string) => {
+    console.log('loadUserProfile called for userId:', userId, 'email:', userEmail);
+    
     try {
+      console.log('Attempting to get user profile from database...');
       const profile = await dbHelpers.getUserProfile(userId);
+      console.log('User profile retrieved:', profile);
       setUserProfile(profile);
+      console.log('User profile set in state successfully');
     } catch (error) {
-      console.log('User profile not found, creating new profile...');
+      console.log('User profile not found, creating new profile...', error);
       
       // Create a basic user profile if it doesn't exist
       try {
@@ -181,8 +187,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         const companyInfo = {};
+        console.log('Creating new user profile with email:', email);
         
         const newProfile = await dbHelpers.createUserProfile(userId, email, companyInfo);
+        console.log('New profile created:', newProfile);
         setUserProfile(newProfile);
         console.log('Created new user profile successfully');
       } catch (createError) {

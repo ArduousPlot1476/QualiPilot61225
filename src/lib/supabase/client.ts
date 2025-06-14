@@ -237,6 +237,8 @@ export const dbHelpers = {
       throw new Error('Supabase is not configured. Please add your Supabase credentials to the .env file.');
     }
 
+    console.log('Creating user profile for user:', userId, 'with email:', email, 'and company info:', companyInfo);
+
     const response = await supabase
       .from('users')
       .insert({
@@ -247,7 +249,9 @@ export const dbHelpers = {
       .select()
       .single();
 
-    return handleSupabaseResponse(response);
+    const result = handleSupabaseResponse(response);
+    console.log('User profile created successfully:', result);
+    return result;
   },
 
   getUserProfile: async (userId: string) => {
@@ -255,13 +259,17 @@ export const dbHelpers = {
       throw new Error('Supabase is not configured. Please add your Supabase credentials to the .env file.');
     }
 
+    console.log('Fetching user profile for user:', userId);
+
     const response = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
       .maybeSingle();
 
-    return handleSupabaseResponseMaybeNull(response);
+    const result = handleSupabaseResponseMaybeNull(response);
+    console.log('User profile fetch result:', result);
+    return result;
   },
 
   updateUserProfile: async (userId: string, updates: any) => {

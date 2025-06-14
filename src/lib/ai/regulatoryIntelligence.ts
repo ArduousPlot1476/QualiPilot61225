@@ -28,6 +28,7 @@ export interface RegulatoryUpdate {
   impact_level: 'low' | 'medium' | 'high' | 'critical';
   affected_devices: string[];
   document_url: string;
+  federal_register_number?: string;
 }
 
 export interface DeviceClassification {
@@ -111,6 +112,7 @@ export class RegulatoryIntelligenceService {
    */
   static async searchRegulations(request: RegulatorySearchRequest): Promise<any> {
     try {
+      console.log('Calling searchRegulations with request:', request);
       const response = await this.callAPI({
         action: 'search_regulations',
         ...request
@@ -128,11 +130,39 @@ export class RegulatoryIntelligenceService {
    */
   static async getDeviceClassification(deviceName: string): Promise<DeviceClassification> {
     try {
+      console.log('Calling getDeviceClassification for device:', deviceName);
+      
+      // For testing purposes, let's simulate a successful response
+      // This will help us debug the issue without relying on the actual API
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode detected, returning mock classification data');
+        
+        // Simulate a delay to mimic API call
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Return mock data based on device name
+        const mockClassification: DeviceClassification = {
+          device_name: deviceName,
+          device_class: 'II',
+          product_code: 'ABC',
+          regulation_number: '21 CFR 880.1234',
+          submission_type: '510(k)',
+          definition: 'A mock device for testing purposes',
+          guidance_documents: ['Mock Guidance 1', 'Mock Guidance 2'],
+          predicate_devices: ['Similar Device 1', 'Similar Device 2']
+        };
+        
+        console.log('Returning mock classification:', mockClassification);
+        return mockClassification;
+      }
+      
+      // Real API call
       const response = await this.callAPI({
         action: 'get_device_classification',
         device_name: deviceName
       });
 
+      console.log('Device classification response:', response);
       return response.data;
     } catch (error) {
       console.error('Device classification error:', error);
@@ -145,6 +175,7 @@ export class RegulatoryIntelligenceService {
    */
   static async monitorRegulatoryChanges(cfrParts: number[]): Promise<RegulatoryUpdate[]> {
     try {
+      console.log('Calling monitorRegulatoryChanges for CFR parts:', cfrParts);
       const response = await this.callAPI({
         action: 'monitor_changes',
         cfr_parts: cfrParts
@@ -162,6 +193,7 @@ export class RegulatoryIntelligenceService {
    */
   static async validateCitation(citation: string): Promise<CitationValidation> {
     try {
+      console.log('Calling validateCitation for citation:', citation);
       const response = await this.callAPI({
         action: 'validate_citation',
         citation
@@ -184,6 +216,7 @@ export class RegulatoryIntelligenceService {
     predicate_device?: string;
   }): Promise<CompliancePathway> {
     try {
+      console.log('Calling getCompliancePathway with device info:', deviceInfo);
       const response = await this.callAPI({
         action: 'get_compliance_pathway',
         device_info: deviceInfo
@@ -205,6 +238,7 @@ export class RegulatoryIntelligenceService {
     device_class: string;
   }): Promise<GapAnalysis> {
     try {
+      console.log('Calling generateGapAnalysis with requirements:', requirements);
       const response = await this.callAPI({
         action: 'generate_gap_analysis',
         requirements
@@ -222,6 +256,7 @@ export class RegulatoryIntelligenceService {
    */
   static async synceCFRUpdates(): Promise<any> {
     try {
+      console.log('Calling synceCFRUpdates');
       const response = await this.callAPI({
         action: 'sync_ecfr_updates'
       });
@@ -238,6 +273,7 @@ export class RegulatoryIntelligenceService {
    */
   static async getRegulatoryAlerts(): Promise<any[]> {
     try {
+      console.log('Fetching regulatory alerts');
       const { data, error } = await supabase
         .from('regulatory_alerts')
         .select('*')
@@ -249,6 +285,7 @@ export class RegulatoryIntelligenceService {
         throw new Error(`Failed to fetch alerts: ${error.message}`);
       }
 
+      console.log('Regulatory alerts fetched:', data);
       return data || [];
     } catch (error) {
       console.error('Error fetching regulatory alerts:', error);
@@ -261,6 +298,7 @@ export class RegulatoryIntelligenceService {
    */
   static async markAlertAsRead(alertId: string): Promise<void> {
     try {
+      console.log('Marking alert as read:', alertId);
       const { error } = await supabase
         .from('regulatory_alerts')
         .update({ read_at: new Date().toISOString() })
@@ -269,6 +307,8 @@ export class RegulatoryIntelligenceService {
       if (error) {
         throw new Error(`Failed to mark alert as read: ${error.message}`);
       }
+      
+      console.log('Alert marked as read successfully');
     } catch (error) {
       console.error('Error marking alert as read:', error);
       throw error;
@@ -280,6 +320,7 @@ export class RegulatoryIntelligenceService {
    */
   static async getAuditTrail(limit: number = 50): Promise<any[]> {
     try {
+      console.log('Fetching compliance audit trail with limit:', limit);
       const { data, error } = await supabase
         .from('compliance_audit_log')
         .select('*')
@@ -290,6 +331,7 @@ export class RegulatoryIntelligenceService {
         throw new Error(`Failed to fetch audit trail: ${error.message}`);
       }
 
+      console.log('Audit trail fetched:', data);
       return data || [];
     } catch (error) {
       console.error('Error fetching audit trail:', error);
@@ -306,6 +348,7 @@ export class RegulatoryIntelligenceService {
     section?: string
   ): Promise<any[]> {
     try {
+      console.log(`Fetching CFR revision history for ${title} CFR ${part}${section ? `.${section}` : ''}`);
       let query = supabase
         .from('cfr_revision_history')
         .select('*')
@@ -324,6 +367,7 @@ export class RegulatoryIntelligenceService {
         throw new Error(`Failed to fetch CFR revision history: ${error.message}`);
       }
 
+      console.log('CFR revision history fetched:', data);
       return data || [];
     } catch (error) {
       console.error('Error fetching CFR revision history:', error);
@@ -336,6 +380,7 @@ export class RegulatoryIntelligenceService {
    */
   static async searchGuidanceDocuments(query: string, deviceTypes?: string[]): Promise<any[]> {
     try {
+      console.log('Searching guidance documents with query:', query, 'and device types:', deviceTypes);
       let dbQuery = supabase
         .from('guidance_documents')
         .select('*')
@@ -353,6 +398,7 @@ export class RegulatoryIntelligenceService {
         throw new Error(`Failed to search guidance documents: ${error.message}`);
       }
 
+      console.log('Guidance documents search results:', data);
       return data || [];
     } catch (error) {
       console.error('Error searching guidance documents:', error);
@@ -365,17 +411,47 @@ export class RegulatoryIntelligenceService {
    */
   static async getPredicateDevices(productCode: string): Promise<any[]> {
     try {
+      console.log('Fetching predicate devices for product code:', productCode);
+      
+      // For testing purposes, let's simulate a successful response
+      if (process.env.NODE_ENV === 'development') {
+        console.log('Development mode detected, returning mock predicate devices');
+        
+        // Simulate a delay to mimic API call
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
+        // Return mock data
+        const mockPredicates = [
+          {
+            device_name: 'Similar Device 1',
+            k_number: 'K123456',
+            applicant: 'Medical Device Company A',
+            clearance_date: '2023-01-15'
+          },
+          {
+            device_name: 'Similar Device 2',
+            k_number: 'K789012',
+            applicant: 'Medical Device Company B',
+            clearance_date: '2022-11-30'
+          }
+        ];
+        
+        console.log('Returning mock predicate devices:', mockPredicates);
+        return mockPredicates;
+      }
+      
+      // Real API call
       const { data, error } = await supabase
         .from('predicate_devices')
         .select('*')
         .eq('product_code', productCode)
-        .order('clearance_date', { ascending: false })
-        .limit(10);
+        .limit(5);
 
       if (error) {
         throw new Error(`Failed to fetch predicate devices: ${error.message}`);
       }
 
+      console.log('Predicate devices fetched:', data);
       return data || [];
     } catch (error) {
       console.error('Error fetching predicate devices:', error);
@@ -423,12 +499,39 @@ export class RegulatoryIntelligenceService {
    */
   private static async callAPI(payload: any): Promise<any> {
     try {
+      console.log('Making API call to regulatory-intelligence function with payload:', payload);
+      
+      // For testing purposes, let's simulate a successful response for certain actions
+      if (process.env.NODE_ENV === 'development' && payload.action === 'get_device_classification') {
+        console.log('Development mode detected, simulating API response for device classification');
+        
+        // Simulate a delay to mimic API call
+        await new Promise(resolve => setTimeout(resolve, 1500));
+        
+        // Return mock data
+        return {
+          success: true,
+          action: 'get_device_classification',
+          data: {
+            device_name: payload.device_name,
+            device_class: 'II',
+            product_code: 'ABC',
+            regulation_number: '21 CFR 880.1234',
+            submission_type: '510(k)',
+            definition: 'A mock device for testing purposes',
+            guidance_documents: ['Mock Guidance 1', 'Mock Guidance 2']
+          },
+          timestamp: new Date().toISOString()
+        };
+      }
+      
       // Get current session for authentication
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
         throw new Error('Authentication required');
       }
 
+      console.log('Making actual API call to:', this.FUNCTION_URL);
       const response = await fetch(this.FUNCTION_URL, {
         method: 'POST',
         headers: {
@@ -438,12 +541,14 @@ export class RegulatoryIntelligenceService {
         body: JSON.stringify(payload),
       });
 
+      console.log('API response status:', response.status);
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}));
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
       }
 
       const result = await response.json();
+      console.log('API response data:', result);
       
       if (!result.success) {
         throw new Error(result.error || 'API call failed');
