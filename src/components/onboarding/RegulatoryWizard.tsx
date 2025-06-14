@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, ChevronRight, ChevronLeft, CheckCircle, Building, FileText, AlertTriangle, Home, Info, Loader2 } from 'lucide-react';
 import { CompanyInformationForm } from './CompanyInformationForm';
@@ -26,6 +26,37 @@ export const RegulatoryWizard: React.FC = () => {
   const { user, updateProfile, userProfile } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
+
+  // Load existing profile data if available
+  useEffect(() => {
+    if (userProfile?.company_info) {
+      // If user already has company info, pre-fill the form
+      if (userProfile.company_info.company_name) {
+        setCompanyInfo({
+          legalName: userProfile.company_info.company_name,
+          dunsNumber: userProfile.company_info.dunsNumber || '',
+          annualRevenue: userProfile.company_info.annualRevenue || '',
+          employeeCount: userProfile.company_info.company_size || '',
+          qmsStatus: userProfile.company_info.qmsStatus || '',
+          priorSubmissions: userProfile.company_info.priorSubmissions || '',
+          certifications: userProfile.company_info.certifications || [],
+          contactName: userProfile.company_info.contact_name || '',
+          contactEmail: userProfile.company_info.contact_email || user?.email || '',
+          contactPhone: userProfile.company_info.contact_phone || '',
+          address: userProfile.company_info.address || '',
+          establishmentNumber: userProfile.company_info.establishment_number || ''
+        });
+      }
+
+      // If user already has device info, pre-fill the form
+      if (userProfile.company_info.device_info) {
+        setDeviceInfo(userProfile.company_info.device_info);
+        setDeviceClassification(userProfile.company_info.classification);
+        setSelectedPathway(userProfile.company_info.regulatory_pathway);
+        setComplianceRoadmap(userProfile.company_info.compliance_roadmap);
+      }
+    }
+  }, [userProfile, user]);
 
   // Regulatory pathways based on device classification
   const pathwayOptions = [
@@ -137,6 +168,8 @@ export const RegulatoryWizard: React.FC = () => {
   };
 
   const handleFinish = async () => {
+    if (isLoading) return; // Prevent multiple clicks
+    
     setIsLoading(true);
     
     try {
@@ -144,30 +177,41 @@ export const RegulatoryWizard: React.FC = () => {
       
       // Save all information to user profile
       const regulatoryProfile = {
-        company_info: companyInfo,
-        device_info: deviceInfo,
-        classification: deviceClassification,
-        regulatory_pathway: selectedPathway,
-        compliance_roadmap: complianceRoadmap,
-        onboarding_completed: true,
-        onboarding_date: new Date().toISOString()
+        company_info: {
+          company_name: companyInfo.legalName,
+          dunsNumber: companyInfo.dunsNumber,
+          annualRevenue: companyInfo.annualRevenue,
+          company_size: companyInfo.employeeCount,
+          qmsStatus: companyInfo.qmsStatus,
+          priorSubmissions: companyInfo.priorSubmissions,
+          certifications: companyInfo.certifications,
+          contact_name: companyInfo.contactName,
+          contact_email: companyInfo.contactEmail || user?.email,
+          contact_phone: companyInfo.contactPhone,
+          address: companyInfo.address,
+          establishment_number: companyInfo.establishmentNumber,
+          // Add regulatory profile data
+          device_info: deviceInfo,
+          classification: deviceClassification,
+          regulatory_pathway: selectedPathway,
+          compliance_roadmap: complianceRoadmap,
+          onboarding_completed: true,
+          onboarding_date: new Date().toISOString()
+        },
+        regulatory_profile_completed: true
       };
       
       // Merge with existing company_info if available
-      const updatedCompanyInfo = {
-        ...(userProfile?.company_info || {}),
-        ...regulatoryProfile
-      };
+      if (userProfile?.company_info) {
+        regulatoryProfile.company_info = {
+          ...userProfile.company_info,
+          ...regulatoryProfile.company_info
+        };
+      }
       
-      console.log('Updating profile with:', { 
-        company_info: updatedCompanyInfo,
-        regulatory_profile_completed: true
-      });
+      console.log('Updating profile with:', regulatoryProfile);
       
-      await updateProfile({ 
-        company_info: updatedCompanyInfo,
-        regulatory_profile_completed: true
-      });
+      await updateProfile(regulatoryProfile);
       
       console.log('Profile updated successfully');
       
@@ -186,7 +230,7 @@ export const RegulatoryWizard: React.FC = () => {
       showToast({
         type: 'error',
         title: 'Save Failed',
-        message: 'Failed to save your regulatory profile',
+        message: 'Failed to save your regulatory profile. Please try again.',
         duration: 5000
       });
     } finally {
@@ -360,7 +404,7 @@ export const RegulatoryWizard: React.FC = () => {
               regulatoryPathway: selectedPathway || ''
             }}
             companyInfo={{
-              name: companyInfo.companyName,
+              name: companyInfo.legalName,
               contact: companyInfo.contactName
             }}
             onExport={handleExportRoadmap}
@@ -492,8 +536,8 @@ export const RegulatoryWizard: React.FC = () => {
                 </>
               ) : (
                 <>
+                  <CheckCircle className="h-4 w-4 mr-2" />
                   <span>Complete Setup</span>
-                  <CheckCircle className="h-4 w-4 ml-2" />
                 </>
               )}
             </button>
