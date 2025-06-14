@@ -343,6 +343,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         await authHelpers.updateProfile(updates);
         
         // Update user profile in database
+        console.log('Calling dbHelpers.updateUserProfile with updates:', updates);
         if (userProfile) {
           const updatedProfile = await dbHelpers.updateUserProfile(user.id, updates);
           setUserProfile(updatedProfile);
@@ -355,6 +356,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           const newProfile = await dbHelpers.createUserProfile(user.id, email, updates);
           setUserProfile(newProfile);
         }
+        console.log('userProfile state after update:', userProfile);
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : 'Profile update failed';

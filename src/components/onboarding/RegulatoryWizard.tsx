@@ -173,8 +173,14 @@ export const RegulatoryWizard: React.FC = () => {
     setIsLoading(true);
     
     try {
-      console.log('Saving regulatory profile...');
-      
+      console.log('--- Starting handleFinish ---');
+      console.log('Current companyInfo:', companyInfo);
+      console.log('Current deviceInfo:', deviceInfo);
+      console.log('Current deviceClassification:', deviceClassification);
+      console.log('Current selectedPathway:', selectedPathway);
+      console.log('Current complianceRoadmap:', complianceRoadmap);
+      console.log('Current userProfile from useAuth():', userProfile);
+
       // Save all information to user profile
       const regulatoryProfile = {
         company_info: {
@@ -209,8 +215,7 @@ export const RegulatoryWizard: React.FC = () => {
         };
       }
       
-      console.log('Updating profile with:', regulatoryProfile);
-      
+      console.log('Regulatory profile object to be sent to updateProfile:', regulatoryProfile);
       await updateProfile(regulatoryProfile);
       
       console.log('Profile updated successfully');
@@ -224,6 +229,7 @@ export const RegulatoryWizard: React.FC = () => {
       
       // Redirect to dashboard
       navigate('/dashboard');
+      console.log('--- handleFinish completed ---');
     } catch (error) {
       console.error('Error saving regulatory profile:', error);
       
@@ -528,6 +534,7 @@ export const RegulatoryWizard: React.FC = () => {
               onClick={handleFinish}
               disabled={isLoading}
               className="px-4 py-2 bg-teal-600 dark:bg-teal-700 text-white rounded-lg hover:bg-teal-700 dark:hover:bg-teal-600 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              id="completeSetupButton"
             >
               {isLoading ? (
                 <>

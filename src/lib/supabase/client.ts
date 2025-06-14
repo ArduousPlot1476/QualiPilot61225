@@ -277,6 +277,8 @@ export const dbHelpers = {
       throw new Error('Supabase is not configured. Please add your Supabase credentials to the .env file.');
     }
 
+    console.log('dbHelpers.updateUserProfile called. userId:', userId, 'updates:', updates);
+
     // If updates contains company_info, merge it with existing company_info
     if (updates.company_info) {
       const { data: existingProfile } = await supabase
@@ -285,6 +287,8 @@ export const dbHelpers = {
         .eq('id', userId)
         .single();
       
+      console.log('Existing profile fetched for merge:', existingProfile);
+
       if (existingProfile) {
         updates.company_info = {
           ...existingProfile.company_info,
@@ -293,6 +297,8 @@ export const dbHelpers = {
       }
     }
 
+    console.log('Updates object after potential company_info merge:', updates);
+
     const response = await supabase
       .from('users')
       .update(updates)
@@ -300,7 +306,10 @@ export const dbHelpers = {
       .select()
       .single();
 
-    return handleSupabaseResponse(response);
+    const result = handleSupabaseResponse(response);
+    console.log('Response from Supabase update:', response);
+    console.log('Result from handleSupabaseResponse:', result);
+    return result;
   },
 
   // Thread operations
