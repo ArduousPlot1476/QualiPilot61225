@@ -181,7 +181,7 @@ export const RegulatoryWizard: React.FC = () => {
       console.log('Current complianceRoadmap:', complianceRoadmap);
       console.log('Current userProfile from useAuth():', userProfile);
 
-      // Save all information to user profile
+      // Create a simplified regulatory profile object to avoid potential circular references
       const regulatoryProfile = {
         company_info: {
           company_name: companyInfo.legalName,
@@ -197,26 +197,47 @@ export const RegulatoryWizard: React.FC = () => {
           address: companyInfo.address,
           establishment_number: companyInfo.establishmentNumber,
           // Add regulatory profile data
-          device_info: deviceInfo,
-          classification: deviceClassification,
+          device_info: {
+            name: deviceInfo.name,
+            classification: deviceInfo.classification,
+            productCode: deviceInfo.productCode,
+            regulationNumber: deviceInfo.regulationNumber
+          },
+          classification: {
+            device_class: deviceClassification.device_class,
+            product_code: deviceClassification.product_code,
+            submission_type: deviceClassification.submission_type
+          },
           regulatory_pathway: selectedPathway,
-          compliance_roadmap: complianceRoadmap,
+          compliance_roadmap: {
+            applicableRegulations: complianceRoadmap.applicableRegulations,
+            requiredStandards: complianceRoadmap.requiredStandards,
+            testingProtocols: complianceRoadmap.testingProtocols,
+            qualitySystemRequirements: complianceRoadmap.qualitySystemRequirements,
+            clinicalEvidenceNeeds: complianceRoadmap.clinicalEvidenceNeeds,
+            postMarketSurveillance: complianceRoadmap.postMarketSurveillance,
+            documentTemplates: complianceRoadmap.documentTemplates
+          },
           onboarding_completed: true,
           onboarding_date: new Date().toISOString()
         },
         regulatory_profile_completed: true
       };
       
-      // Merge with existing company_info if available
-      if (userProfile?.company_info) {
-        regulatoryProfile.company_info = {
-          ...userProfile.company_info,
-          ...regulatoryProfile.company_info
-        };
-      }
-      
       console.log('Regulatory profile object to be sent to updateProfile:', regulatoryProfile);
-      await updateProfile(regulatoryProfile);
+      
+      // Update the profile with a timeout to prevent hanging
+      const updatePromise = updateProfile(regulatoryProfile);
+      
+      // Set a timeout to prevent infinite loading
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Profile update timed out after 10 seconds'));
+        }, 10000);
+      });
+      
+      // Race the update against the timeout
+      await Promise.race([updatePromise, timeoutPromise]);
       
       console.log('Profile updated successfully');
       
@@ -239,6 +260,12 @@ export const RegulatoryWizard: React.FC = () => {
         message: 'Failed to save your regulatory profile. Please try again.',
         duration: 5000
       });
+      
+      // Even if there's an error, we'll still redirect to dashboard
+      // This prevents the user from getting stuck in the wizard
+      setTimeout(() => {
+        navigate('/dashboard');
+      }, 2000);
     } finally {
       setIsLoading(false);
     }

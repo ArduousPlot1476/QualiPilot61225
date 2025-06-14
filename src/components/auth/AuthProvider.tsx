@@ -192,7 +192,6 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       // If profile is null, create a new one
       console.log('User profile not found, creating new profile...');
       
-      // Create a basic user profile if it doesn't exist
       try {
         const email = userEmail || '';
         if (!email) {
@@ -353,7 +352,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           if (!email) {
             throw new Error('User email is required to create profile');
           }
-          const newProfile = await dbHelpers.createUserProfile(user.id, email, updates);
+          
+          const newProfile = await dbHelpers.createUserProfile(user.id, email, updates.company_info || {});
           setUserProfile(newProfile);
         }
         console.log('userProfile state after update:', userProfile);

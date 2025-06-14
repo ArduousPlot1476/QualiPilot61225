@@ -37,11 +37,17 @@ export const OnboardingRedirect: React.FC = () => {
       } catch (error) {
         console.error('Error checking profile:', error);
         setIsLoading(false);
+        
+        // If there's an error, still show skip option immediately
+        setShowSkipOption(true);
       }
     };
     
     if (user) {
       checkProfile();
+    } else {
+      // If no user, redirect to login
+      navigate('/auth/login');
     }
   }, [user, userProfile, navigate]);
 

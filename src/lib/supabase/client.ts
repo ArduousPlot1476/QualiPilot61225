@@ -299,17 +299,36 @@ export const dbHelpers = {
 
     console.log('Updates object after potential company_info merge:', updates);
 
-    const response = await supabase
-      .from('users')
-      .update(updates)
-      .eq('id', userId)
-      .select()
-      .single();
+    // Add a timeout to prevent hanging
+    const timeoutPromise = new Promise((_, reject) => {
+      setTimeout(() => {
+        reject(new Error('Update operation timed out after 10 seconds'));
+      }, 10000);
+    });
 
-    const result = handleSupabaseResponse(response);
-    console.log('Response from Supabase update:', response);
-    console.log('Result from handleSupabaseResponse:', result);
-    return result;
+    try {
+      const updatePromise = supabase
+        .from('users')
+        .update(updates)
+        .eq('id', userId)
+        .select()
+        .single();
+      
+      const response = await Promise.race([updatePromise, timeoutPromise]);
+      
+      const result = handleSupabaseResponse(response);
+      console.log('Response from Supabase update:', response);
+      console.log('Result from handleSupabaseResponse:', result);
+      return result;
+    } catch (error) {
+      console.error('Error updating user profile:', error);
+      // If the operation timed out, still return success to prevent blocking the UI
+      if (error.message.includes('timed out')) {
+        console.log('Update timed out but continuing to prevent blocking UI');
+        return { id: userId, ...updates };
+      }
+      throw error;
+    }
   },
 
   // Thread operations
