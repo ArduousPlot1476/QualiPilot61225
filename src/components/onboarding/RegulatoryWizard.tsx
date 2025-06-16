@@ -23,6 +23,7 @@ export const RegulatoryWizard: React.FC = () => {
   const [selectedPathway, setSelectedPathway] = useState<string | null>(null);
   const [complianceRoadmap, setComplianceRoadmap] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [updateError, setUpdateError] = useState<string | null>(null);
   const { user, updateProfile, userProfile } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -171,17 +172,11 @@ export const RegulatoryWizard: React.FC = () => {
     if (isLoading) return; // Prevent multiple clicks
     
     setIsLoading(true);
+    setUpdateError(null);
     
     try {
-      console.log('--- Starting handleFinish ---');
-      console.log('Current companyInfo:', companyInfo);
-      console.log('Current deviceInfo:', deviceInfo);
-      console.log('Current deviceClassification:', deviceClassification);
-      console.log('Current selectedPathway:', selectedPathway);
-      console.log('Current complianceRoadmap:', complianceRoadmap);
-      console.log('Current userProfile from useAuth():', userProfile);
-
-      // Create a simplified regulatory profile object to avoid potential circular references
+      // Create a simplified regulatory profile object
+      // Avoid deep nesting and circular references
       const regulatoryProfile = {
         company_info: {
           company_name: companyInfo.legalName,
@@ -196,19 +191,26 @@ export const RegulatoryWizard: React.FC = () => {
           contact_phone: companyInfo.contactPhone,
           address: companyInfo.address,
           establishment_number: companyInfo.establishmentNumber,
-          // Add regulatory profile data
+          
+          // Device information - simplified structure
           device_info: {
             name: deviceInfo.name,
             classification: deviceInfo.classification,
             productCode: deviceInfo.productCode,
             regulationNumber: deviceInfo.regulationNumber
           },
+          
+          // Classification - only essential fields
           classification: {
             device_class: deviceClassification.device_class,
             product_code: deviceClassification.product_code,
             submission_type: deviceClassification.submission_type
           },
+          
+          // Regulatory pathway - just the string
           regulatory_pathway: selectedPathway,
+          
+          // Compliance roadmap - simplified structure
           compliance_roadmap: {
             applicableRegulations: complianceRoadmap.applicableRegulations,
             requiredStandards: complianceRoadmap.requiredStandards,
@@ -216,30 +218,24 @@ export const RegulatoryWizard: React.FC = () => {
             qualitySystemRequirements: complianceRoadmap.qualitySystemRequirements,
             clinicalEvidenceNeeds: complianceRoadmap.clinicalEvidenceNeeds,
             postMarketSurveillance: complianceRoadmap.postMarketSurveillance,
-            documentTemplates: complianceRoadmap.documentTemplates
+            // Only include essential template data
+            documentTemplates: complianceRoadmap.documentTemplates.map((template: any) => ({
+              name: template.name,
+              description: template.description,
+              required: template.required,
+              templateId: template.templateId
+            }))
           },
+          
+          // Flags
           onboarding_completed: true,
           onboarding_date: new Date().toISOString()
         },
         regulatory_profile_completed: true
       };
       
-      console.log('Regulatory profile object to be sent to updateProfile:', regulatoryProfile);
-      
-      // Update the profile with a timeout to prevent hanging
-      const updatePromise = updateProfile(regulatoryProfile);
-      
-      // Set a timeout to prevent infinite loading - increased to 20 seconds
-      const timeoutPromise = new Promise((_, reject) => {
-        setTimeout(() => {
-          reject(new Error('Profile update timed out after 20 seconds'));
-        }, 20000);
-      });
-      
-      // Race the update against the timeout
-      await Promise.race([updatePromise, timeoutPromise]);
-      
-      console.log('Profile updated successfully');
+      // Update the profile
+      await updateProfile(regulatoryProfile);
       
       showToast({
         type: 'success',
@@ -250,9 +246,12 @@ export const RegulatoryWizard: React.FC = () => {
       
       // Redirect to dashboard
       navigate('/dashboard');
-      console.log('--- handleFinish completed ---');
+      
     } catch (error) {
       console.error('Error saving regulatory profile:', error);
+      
+      // Set the specific error message
+      setUpdateError(error instanceof Error ? error.message : 'Failed to save your regulatory profile');
       
       showToast({
         type: 'error',
@@ -261,11 +260,11 @@ export const RegulatoryWizard: React.FC = () => {
         duration: 5000
       });
       
-      // Even if there's an error, we'll still redirect to dashboard
+      // Even if there's an error, we'll still redirect to dashboard after a delay
       // This prevents the user from getting stuck in the wizard
       setTimeout(() => {
         navigate('/dashboard');
-      }, 2000);
+      }, 5000);
     } finally {
       setIsLoading(false);
     }
@@ -516,6 +515,23 @@ export const RegulatoryWizard: React.FC = () => {
         {/* Step Content */}
         <div className="p-6">
           {renderStepContent()}
+          
+          {/* Error Message */}
+          {updateError && (
+            <div className="mt-6 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg">
+              <div className="flex items-start">
+                <AlertTriangle className="h-5 w-5 text-red-500 dark:text-red-400 mt-0.5" />
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Error Saving Profile</h3>
+                  <p className="text-sm text-red-700 dark:text-red-400 mt-1">{updateError}</p>
+                  <p className="text-sm text-red-700 dark:text-red-400 mt-1">
+                    You will be redirected to the dashboard, but your changes may not have been saved.
+                    Please try again later or contact support if the issue persists.
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Navigation Buttons */}

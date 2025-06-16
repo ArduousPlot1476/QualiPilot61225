@@ -280,36 +280,58 @@ export const dbHelpers = {
     console.log('dbHelpers.updateUserProfile called. userId:', userId, 'updates:', updates);
 
     // If updates contains company_info, merge it with existing company_info
+    let mergedUpdates = { ...updates };
+    
     if (updates.company_info) {
-      const { data: existingProfile } = await supabase
-        .from('users')
-        .select('company_info')
-        .eq('id', userId)
-        .single();
-      
-      console.log('Existing profile fetched for merge:', existingProfile);
+      try {
+        // Get existing profile first
+        const { data: existingProfile } = await supabase
+          .from('users')
+          .select('company_info')
+          .eq('id', userId)
+          .single();
+        
+        console.log('Existing profile fetched for merge:', existingProfile);
 
-      if (existingProfile) {
-        updates.company_info = {
-          ...existingProfile.company_info,
-          ...updates.company_info
-        };
+        if (existingProfile && existingProfile.company_info) {
+          // Create a deep copy of the existing company_info to avoid reference issues
+          const existingCompanyInfo = JSON.parse(JSON.stringify(existingProfile.company_info));
+          
+          // Perform a deep merge of company_info
+          mergedUpdates.company_info = deepMerge(existingCompanyInfo, updates.company_info);
+          
+          console.log('Merged company_info:', mergedUpdates.company_info);
+        }
+      } catch (error) {
+        console.error('Error fetching existing profile for merge:', error);
+        // Continue with the update even if merge fails
       }
     }
 
-    console.log('Updates object after potential company_info merge:', updates);
+    console.log('Final updates object to be sent to Supabase:', mergedUpdates);
 
-    // Add a timeout to prevent hanging
-    const timeoutPromise = new Promise((_, reject) => {
-      setTimeout(() => {
-        reject(new Error('Update operation timed out after 10 seconds'));
-      }, 10000);
-    });
+    // Split the update into smaller chunks if it's too large
+    const updateSize = JSON.stringify(mergedUpdates).length;
+    console.log('Update payload size:', updateSize, 'bytes');
+    
+    // If the payload is very large, we'll use a different approach
+    if (updateSize > 100000) { // 100KB threshold
+      console.log('Large update detected, using chunked approach');
+      return await updateUserProfileChunked(userId, mergedUpdates);
+    }
 
+    // Standard update for smaller payloads
     try {
+      // Add a timeout to prevent hanging - increased to 30 seconds
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => {
+          reject(new Error('Profile update timed out after 30 seconds'));
+        }, 30000);
+      });
+      
       const updatePromise = supabase
         .from('users')
-        .update(updates)
+        .update(mergedUpdates)
         .eq('id', userId)
         .select()
         .single();
@@ -322,11 +344,12 @@ export const dbHelpers = {
       return result;
     } catch (error) {
       console.error('Error updating user profile:', error);
-      // If the operation timed out, still return success to prevent blocking the UI
-      if (error.message.includes('timed out')) {
-        console.log('Update timed out but continuing to prevent blocking UI');
-        return { id: userId, ...updates };
+      
+      // If the operation timed out, throw a more specific error
+      if (error.message && error.message.includes('timed out')) {
+        throw new Error('Profile update timed out. The data may be too large or the connection too slow.');
       }
+      
       throw error;
     }
   },
@@ -565,3 +588,167 @@ export const dbHelpers = {
     return true;
   }
 };
+
+// Helper function for deep merging objects
+function deepMerge(target: any, source: any): any {
+  // Create a new object to avoid modifying the original objects
+  const output = { ...target };
+  
+  // Handle case when target is not an object
+  if (isObject(target) && isObject(source)) {
+    Object.keys(source).forEach(key => {
+      if (isObject(source[key])) {
+        // If property doesn't exist on target, create it
+        if (!output[key]) {
+          output[key] = {};
+        }
+        
+        // If property exists and is an object, merge it
+        if (isObject(output[key])) {
+          output[key] = deepMerge(output[key], source[key]);
+        } else {
+          // Otherwise just replace it
+          output[key] = source[key];
+        }
+      } else {
+        // For non-objects, simply overwrite the property
+        output[key] = source[key];
+      }
+    });
+  }
+  
+  return output;
+}
+
+// Helper to check if value is an object
+function isObject(item: any): boolean {
+  return (item && typeof item === 'object' && !Array.isArray(item));
+}
+
+// Function to update user profile in chunks for large payloads
+async function updateUserProfileChunked(userId: string, updates: any): Promise<any> {
+  console.log('Using chunked update approach for large profile data');
+  
+  // First, update non-company_info fields if any
+  const nonCompanyInfoUpdates = { ...updates };
+  delete nonCompanyInfoUpdates.company_info;
+  
+  if (Object.keys(nonCompanyInfoUpdates).length > 0) {
+    await supabase
+      .from('users')
+      .update(nonCompanyInfoUpdates)
+      .eq('id', userId);
+  }
+  
+  // If there's company_info to update, handle it separately
+  if (updates.company_info) {
+    // Split company_info into smaller chunks
+    const companyInfo = updates.company_info;
+    
+    // Update essential fields first
+    const essentialFields = {
+      company_name: companyInfo.company_name,
+      contact_name: companyInfo.contact_name,
+      contact_email: companyInfo.contact_email,
+      onboarding_completed: companyInfo.onboarding_completed,
+      onboarding_date: companyInfo.onboarding_date
+    };
+    
+    await supabase
+      .from('users')
+      .update({ company_info: essentialFields })
+      .eq('id', userId);
+    
+    // Update device info
+    if (companyInfo.device_info) {
+      await supabase
+        .from('users')
+        .update({ 
+          company_info: {
+            ...essentialFields,
+            device_info: companyInfo.device_info
+          }
+        })
+        .eq('id', userId);
+    }
+    
+    // Update classification
+    if (companyInfo.classification) {
+      await supabase
+        .from('users')
+        .update({ 
+          company_info: {
+            ...essentialFields,
+            device_info: companyInfo.device_info,
+            classification: companyInfo.classification
+          }
+        })
+        .eq('id', userId);
+    }
+    
+    // Update regulatory pathway
+    if (companyInfo.regulatory_pathway) {
+      await supabase
+        .from('users')
+        .update({ 
+          company_info: {
+            ...essentialFields,
+            device_info: companyInfo.device_info,
+            classification: companyInfo.classification,
+            regulatory_pathway: companyInfo.regulatory_pathway
+          }
+        })
+        .eq('id', userId);
+    }
+    
+    // Update compliance roadmap (potentially the largest part)
+    if (companyInfo.compliance_roadmap) {
+      await supabase
+        .from('users')
+        .update({ 
+          company_info: {
+            ...essentialFields,
+            device_info: companyInfo.device_info,
+            classification: companyInfo.classification,
+            regulatory_pathway: companyInfo.regulatory_pathway,
+            compliance_roadmap: companyInfo.compliance_roadmap
+          }
+        })
+        .eq('id', userId);
+    }
+    
+    // Update remaining fields
+    const remainingFields = { ...companyInfo };
+    delete remainingFields.device_info;
+    delete remainingFields.classification;
+    delete remainingFields.regulatory_pathway;
+    delete remainingFields.compliance_roadmap;
+    
+    // Final update with all fields
+    const { data, error } = await supabase
+      .from('users')
+      .update({ company_info: updates.company_info })
+      .eq('id', userId)
+      .select()
+      .single();
+      
+    if (error) {
+      throw new SupabaseError(error.message, error.code, error.details);
+    }
+    
+    return data;
+  }
+  
+  // If we got here without company_info, just fetch and return the user
+  const { data, error } = await supabase
+    .from('users')
+    .select('*')
+    .eq('id', userId)
+    .single();
+    
+  if (error) {
+    throw new SupabaseError(error.message, error.code, error.details);
+  }
+  
+  return data;
+}
