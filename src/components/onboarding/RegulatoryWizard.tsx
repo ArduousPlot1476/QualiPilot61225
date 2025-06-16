@@ -24,6 +24,7 @@ export const RegulatoryWizard: React.FC = () => {
   const [complianceRoadmap, setComplianceRoadmap] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [updateError, setUpdateError] = useState<string | null>(null);
+  const [saveAttempts, setSaveAttempts] = useState(0);
   const { user, updateProfile, userProfile } = useAuth();
   const { showToast } = useToast();
   const navigate = useNavigate();
@@ -173,9 +174,10 @@ export const RegulatoryWizard: React.FC = () => {
     
     setIsLoading(true);
     setUpdateError(null);
+    setSaveAttempts(prev => prev + 1);
     
     try {
-      // Create a simplified regulatory profile object
+      // Create a minimal regulatory profile object
       // Avoid deep nesting and circular references
       const regulatoryProfile = {
         company_info: {
@@ -260,11 +262,12 @@ export const RegulatoryWizard: React.FC = () => {
         duration: 5000
       });
       
-      // Even if there's an error, we'll still redirect to dashboard after a delay
-      // This prevents the user from getting stuck in the wizard
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 5000);
+      // If this is the second attempt, offer to redirect anyway
+      if (saveAttempts >= 2) {
+        setTimeout(() => {
+          navigate('/dashboard');
+        }, 5000);
+      }
     } finally {
       setIsLoading(false);
     }
@@ -525,8 +528,9 @@ export const RegulatoryWizard: React.FC = () => {
                   <h3 className="text-sm font-medium text-red-800 dark:text-red-300">Error Saving Profile</h3>
                   <p className="text-sm text-red-700 dark:text-red-400 mt-1">{updateError}</p>
                   <p className="text-sm text-red-700 dark:text-red-400 mt-1">
-                    You will be redirected to the dashboard, but your changes may not have been saved.
-                    Please try again later or contact support if the issue persists.
+                    {saveAttempts >= 2 
+                      ? "You will be redirected to the dashboard, but your changes may not have been saved."
+                      : "Please try again or contact support if the issue persists."}
                   </p>
                 </div>
               </div>

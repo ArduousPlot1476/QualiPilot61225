@@ -277,11 +277,12 @@ export const dbHelpers = {
       throw new Error('Supabase is not configured. Please add your Supabase credentials to the .env file.');
     }
 
-    console.log('dbHelpers.updateUserProfile called. userId:', userId, 'updates:', updates);
+    console.log('dbHelpers.updateUserProfile called. userId:', userId);
 
-    // If updates contains company_info, merge it with existing company_info
-    let mergedUpdates = { ...updates };
+    // Create a minimal version of the updates object
+    let minimalUpdates = { ...updates };
     
+    // If there's company_info, handle it specially
     if (updates.company_info) {
       try {
         // Get existing profile first
@@ -291,16 +292,12 @@ export const dbHelpers = {
           .eq('id', userId)
           .single();
         
-        console.log('Existing profile fetched for merge:', existingProfile);
-
         if (existingProfile && existingProfile.company_info) {
-          // Create a deep copy of the existing company_info to avoid reference issues
-          const existingCompanyInfo = JSON.parse(JSON.stringify(existingProfile.company_info));
-          
-          // Perform a deep merge of company_info
-          mergedUpdates.company_info = deepMerge(existingCompanyInfo, updates.company_info);
-          
-          console.log('Merged company_info:', mergedUpdates.company_info);
+          // Merge the company_info objects
+          minimalUpdates.company_info = mergeCompanyInfo(
+            existingProfile.company_info,
+            updates.company_info
+          );
         }
       } catch (error) {
         console.error('Error fetching existing profile for merge:', error);
@@ -308,46 +305,34 @@ export const dbHelpers = {
       }
     }
 
-    console.log('Final updates object to be sent to Supabase:', mergedUpdates);
+    console.log('Sending update to Supabase with payload size:', 
+      JSON.stringify(minimalUpdates).length, 'bytes');
 
-    // Split the update into smaller chunks if it's too large
-    const updateSize = JSON.stringify(mergedUpdates).length;
-    console.log('Update payload size:', updateSize, 'bytes');
-    
-    // If the payload is very large, we'll use a different approach
-    if (updateSize > 100000) { // 100KB threshold
-      console.log('Large update detected, using chunked approach');
-      return await updateUserProfileChunked(userId, mergedUpdates);
-    }
-
-    // Standard update for smaller payloads
     try {
-      // Add a timeout to prevent hanging - increased to 30 seconds
+      // Set a longer timeout for large updates
       const timeoutPromise = new Promise((_, reject) => {
         setTimeout(() => {
-          reject(new Error('Profile update timed out after 30 seconds'));
-        }, 30000);
+          reject(new Error('Profile update timed out after 45 seconds'));
+        }, 45000);
       });
       
       const updatePromise = supabase
         .from('users')
-        .update(mergedUpdates)
+        .update(minimalUpdates)
         .eq('id', userId)
         .select()
         .single();
       
       const response = await Promise.race([updatePromise, timeoutPromise]);
       
-      const result = handleSupabaseResponse(response);
-      console.log('Response from Supabase update:', response);
-      console.log('Result from handleSupabaseResponse:', result);
-      return result;
+      return handleSupabaseResponse(response);
     } catch (error) {
       console.error('Error updating user profile:', error);
       
-      // If the operation timed out, throw a more specific error
+      // If the operation timed out, try a fallback approach
       if (error.message && error.message.includes('timed out')) {
-        throw new Error('Profile update timed out. The data may be too large or the connection too slow.');
+        console.log('Update timed out, trying fallback approach');
+        return await updateUserProfileFallback(userId, minimalUpdates);
       }
       
       throw error;
@@ -589,45 +574,38 @@ export const dbHelpers = {
   }
 };
 
-// Helper function for deep merging objects
-function deepMerge(target: any, source: any): any {
-  // Create a new object to avoid modifying the original objects
-  const output = { ...target };
+// Simplified merge function for company_info
+function mergeCompanyInfo(existing: any, updates: any): any {
+  // Create a new object to avoid modifying the originals
+  const merged = { ...existing };
   
-  // Handle case when target is not an object
-  if (isObject(target) && isObject(source)) {
-    Object.keys(source).forEach(key => {
-      if (isObject(source[key])) {
-        // If property doesn't exist on target, create it
-        if (!output[key]) {
-          output[key] = {};
-        }
-        
-        // If property exists and is an object, merge it
-        if (isObject(output[key])) {
-          output[key] = deepMerge(output[key], source[key]);
-        } else {
-          // Otherwise just replace it
-          output[key] = source[key];
-        }
-      } else {
-        // For non-objects, simply overwrite the property
-        output[key] = source[key];
-      }
-    });
-  }
+  // For each property in updates, either merge objects or replace values
+  Object.keys(updates).forEach(key => {
+    const existingValue = merged[key];
+    const updateValue = updates[key];
+    
+    // If both are objects (but not arrays), merge them recursively
+    if (
+      existingValue && 
+      updateValue && 
+      typeof existingValue === 'object' && 
+      typeof updateValue === 'object' &&
+      !Array.isArray(existingValue) &&
+      !Array.isArray(updateValue)
+    ) {
+      merged[key] = mergeCompanyInfo(existingValue, updateValue);
+    } else {
+      // Otherwise just replace the value
+      merged[key] = updateValue;
+    }
+  });
   
-  return output;
+  return merged;
 }
 
-// Helper to check if value is an object
-function isObject(item: any): boolean {
-  return (item && typeof item === 'object' && !Array.isArray(item));
-}
-
-// Function to update user profile in chunks for large payloads
-async function updateUserProfileChunked(userId: string, updates: any): Promise<any> {
-  console.log('Using chunked update approach for large profile data');
+// Fallback approach for large profile updates
+async function updateUserProfileFallback(userId: string, updates: any): Promise<any> {
+  console.log('Using fallback approach for profile update');
   
   // First, update non-company_info fields if any
   const nonCompanyInfoUpdates = { ...updates };
@@ -642,104 +620,25 @@ async function updateUserProfileChunked(userId: string, updates: any): Promise<a
   
   // If there's company_info to update, handle it separately
   if (updates.company_info) {
-    // Split company_info into smaller chunks
-    const companyInfo = updates.company_info;
-    
-    // Update essential fields first
+    // Update only essential fields
     const essentialFields = {
-      company_name: companyInfo.company_name,
-      contact_name: companyInfo.contact_name,
-      contact_email: companyInfo.contact_email,
-      onboarding_completed: companyInfo.onboarding_completed,
-      onboarding_date: companyInfo.onboarding_date
+      company_name: updates.company_info.company_name,
+      contact_name: updates.company_info.contact_name,
+      contact_email: updates.company_info.contact_email,
+      onboarding_completed: updates.company_info.onboarding_completed,
+      regulatory_profile_completed: true
     };
     
     await supabase
       .from('users')
-      .update({ company_info: essentialFields })
+      .update({ 
+        company_info: essentialFields,
+        regulatory_profile_completed: true
+      })
       .eq('id', userId);
-    
-    // Update device info
-    if (companyInfo.device_info) {
-      await supabase
-        .from('users')
-        .update({ 
-          company_info: {
-            ...essentialFields,
-            device_info: companyInfo.device_info
-          }
-        })
-        .eq('id', userId);
-    }
-    
-    // Update classification
-    if (companyInfo.classification) {
-      await supabase
-        .from('users')
-        .update({ 
-          company_info: {
-            ...essentialFields,
-            device_info: companyInfo.device_info,
-            classification: companyInfo.classification
-          }
-        })
-        .eq('id', userId);
-    }
-    
-    // Update regulatory pathway
-    if (companyInfo.regulatory_pathway) {
-      await supabase
-        .from('users')
-        .update({ 
-          company_info: {
-            ...essentialFields,
-            device_info: companyInfo.device_info,
-            classification: companyInfo.classification,
-            regulatory_pathway: companyInfo.regulatory_pathway
-          }
-        })
-        .eq('id', userId);
-    }
-    
-    // Update compliance roadmap (potentially the largest part)
-    if (companyInfo.compliance_roadmap) {
-      await supabase
-        .from('users')
-        .update({ 
-          company_info: {
-            ...essentialFields,
-            device_info: companyInfo.device_info,
-            classification: companyInfo.classification,
-            regulatory_pathway: companyInfo.regulatory_pathway,
-            compliance_roadmap: companyInfo.compliance_roadmap
-          }
-        })
-        .eq('id', userId);
-    }
-    
-    // Update remaining fields
-    const remainingFields = { ...companyInfo };
-    delete remainingFields.device_info;
-    delete remainingFields.classification;
-    delete remainingFields.regulatory_pathway;
-    delete remainingFields.compliance_roadmap;
-    
-    // Final update with all fields
-    const { data, error } = await supabase
-      .from('users')
-      .update({ company_info: updates.company_info })
-      .eq('id', userId)
-      .select()
-      .single();
-      
-    if (error) {
-      throw new SupabaseError(error.message, error.code, error.details);
-    }
-    
-    return data;
   }
   
-  // If we got here without company_info, just fetch and return the user
+  // Return the updated user profile
   const { data, error } = await supabase
     .from('users')
     .select('*')
