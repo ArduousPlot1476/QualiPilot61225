@@ -27,14 +27,12 @@ interface ComplianceRoadmapViewProps {
     name: string;
     contact: string;
   };
-  onExport: () => void;
 }
 
 export const ComplianceRoadmapView: React.FC<ComplianceRoadmapViewProps> = ({
   roadmapData,
   deviceInfo,
-  companyInfo,
-  onExport
+  companyInfo
 }) => {
   const [activeTab, setActiveTab] = useState<'overview' | 'documents' | 'timeline'>('overview');
   const [isGenerating, setIsGenerating] = useState<string | null>(null);
@@ -97,14 +95,6 @@ export const ComplianceRoadmapView: React.FC<ComplianceRoadmapViewProps> = ({
         <h3 className="text-xl font-semibold text-slate-900 dark:text-white">
           Compliance Roadmap for {deviceInfo.name}
         </h3>
-        
-        <button
-          onClick={onExport}
-          className="flex items-center space-x-2 px-4 py-2 bg-blue-600 dark:bg-blue-700 text-white rounded-lg hover:bg-blue-700 dark:hover:bg-blue-600 transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          <span>Export Roadmap</span>
-        </button>
       </div>
       
       <div className="bg-teal-50 dark:bg-teal-900/20 border border-teal-200 dark:border-teal-800 rounded-lg p-6">
