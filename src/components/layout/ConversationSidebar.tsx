@@ -90,8 +90,7 @@ export const ConversationSidebar: React.FC = () => {
         title,
         lastMessage: "Start a new conversation",
         timestamp: new Date(),
-        unreadCount: 0,
-        isSelected: true
+        unreadCount: 0
       });
       
       // The actual API call is queued by useOptimisticUpdates
