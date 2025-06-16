@@ -1,6 +1,7 @@
 import { useState, useCallback, useRef } from 'react';
 import { ChatService, ChatStreamResponse } from '../lib/ai/chatService';
 import { useToast } from '../components/ui/Toast';
+import { useAuth } from '../components/auth/AuthProvider';
 
 interface UseAIChatOptions {
   onMessageComplete?: (response: ChatStreamResponse) => void;
@@ -25,6 +26,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
   const [retrievedDocs, setRetrievedDocs] = useState(0);
   const abortControllerRef = useRef<AbortController | null>(null);
   const { showToast } = useToast();
+  const { userProfile } = useAuth();
 
   const sendMessage = useCallback(async (message: string, threadId: string) => {
     if (isStreaming) {
@@ -86,9 +88,13 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
         return;
       }
 
+      // Extract roadmap data from user profile if available
+      const roadmapData = userProfile?.company_info?.roadmap_data;
+      
       // For real threads, use the ChatService
       await ChatService.sendMessage(threadId, message, {
         signal: abortControllerRef.current.signal,
+        roadmapData, // Pass roadmap data to the chat service
         
         onChunk: (chunk: ChatStreamResponse) => {
           if (chunk.type === 'content' && chunk.content) {
@@ -150,7 +156,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
     } finally {
       abortControllerRef.current = null;
     }
-  }, [isStreaming, onMessageComplete, showToast]);
+  }, [isStreaming, onMessageComplete, showToast, userProfile]);
 
   const stopStreaming = useCallback(() => {
     if (abortControllerRef.current) {

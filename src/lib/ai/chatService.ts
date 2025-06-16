@@ -20,6 +20,7 @@ export interface ChatServiceOptions {
   onComplete?: (response: ChatStreamResponse) => void;
   onError?: (error: string) => void;
   signal?: AbortSignal;
+  roadmapData?: any; // Add roadmap data parameter
 }
 
 export class ChatService {
@@ -30,7 +31,7 @@ export class ChatService {
     message: string,
     options: ChatServiceOptions = {}
   ): Promise<void> {
-    const { onChunk, onComplete, onError, signal } = options;
+    const { onChunk, onComplete, onError, signal, roadmapData } = options;
 
     try {
       // Get current session for authentication
@@ -62,6 +63,7 @@ export class ChatService {
         body: JSON.stringify({
           threadId,
           message,
+          roadmapData, // Include roadmap data in the request
         }),
         signal,
       });

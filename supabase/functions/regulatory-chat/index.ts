@@ -6,6 +6,7 @@ interface ChatRequest {
   threadId: string
   message: string
   context?: any[]
+  roadmapData?: any // Add roadmap data parameter
 }
 
 interface ChatMessage {
@@ -80,7 +81,7 @@ serve(async (req) => {
       )
     }
 
-    const { threadId, message, context = [] }: ChatRequest = await req.json()
+    const { threadId, message, context = [], roadmapData = null }: ChatRequest = await req.json()
 
     if (!threadId || !message) {
       return new Response(
@@ -161,8 +162,8 @@ serve(async (req) => {
       .order('created_at', { ascending: true })
       .limit(MAX_CONTEXT_MESSAGES)
 
-    // Build context-aware prompt
-    const contextPrompt = buildContextPrompt(message, relevantDocs, messageHistory || [])
+    // Build context-aware prompt with roadmap data if available
+    const contextPrompt = buildContextPrompt(message, relevantDocs, messageHistory || [], roadmapData)
     
     // Prepare messages for OpenAI
     const messages: ChatMessage[] = [
@@ -392,9 +393,52 @@ async function generateEmbedding(text: string, apiKey: string): Promise<number[]
 function buildContextPrompt(
   query: string, 
   relevantDocs: RegulatoryDocument[], 
-  messageHistory: any[]
+  messageHistory: any[],
+  roadmapData: any // Add roadmap data parameter
 ): string {
   let prompt = `User Query: ${query}\n\n`
+
+  // Add roadmap data if available
+  if (roadmapData) {
+    prompt += `User's Regulatory Profile:\n`
+    
+    // Device information
+    if (roadmapData.deviceInfo) {
+      prompt += `Device: ${roadmapData.deviceInfo.name || 'Not specified'}\n`
+      prompt += `Classification: Class ${roadmapData.classification?.device_class || roadmapData.deviceInfo.classification || 'Not specified'}\n`
+      
+      if (roadmapData.deviceInfo.productCode) {
+        prompt += `Product Code: ${roadmapData.deviceInfo.productCode}\n`
+      }
+      
+      if (roadmapData.deviceInfo.regulationNumber) {
+        prompt += `Regulation Number: ${roadmapData.deviceInfo.regulationNumber}\n`
+      }
+    }
+    
+    // Regulatory pathway
+    if (roadmapData.pathway) {
+      prompt += `Regulatory Pathway: ${roadmapData.pathway.name || 'Not specified'}\n`
+    }
+    
+    // Applicable regulations
+    if (roadmapData.regulatoryOverview?.applicableRegulations) {
+      prompt += `\nApplicable Regulations:\n`
+      roadmapData.regulatoryOverview.applicableRegulations.slice(0, 5).forEach((reg: string) => {
+        prompt += `- ${reg}\n`
+      })
+    }
+    
+    // Required standards
+    if (roadmapData.regulatoryOverview?.requiredStandards) {
+      prompt += `\nRequired Standards:\n`
+      roadmapData.regulatoryOverview.requiredStandards.slice(0, 3).forEach((std: string) => {
+        prompt += `- ${std}\n`
+      })
+    }
+    
+    prompt += `\n`
+  }
 
   if (relevantDocs.length > 0) {
     prompt += `Relevant Regulatory Context:\n`
@@ -423,7 +467,8 @@ function buildContextPrompt(
 3. Includes practical implementation guidance
 4. Provides confidence level (High/Medium/Low)
 5. Cites official sources with URLs where applicable
-6. Considers device classification if relevant
+6. Considers the user's specific device classification and regulatory pathway
+7. Tailors advice to the user's regulatory profile when relevant
 
 Response:`
 

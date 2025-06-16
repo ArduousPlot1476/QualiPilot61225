@@ -12,6 +12,7 @@ import { ContextualHelp } from '../ui/ContextualHelp';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
 import { UploadedFile } from '../ui/FileUploader';
+import { useAuth } from '../auth/AuthProvider';
 
 // Lazy load the VirtualMessageList component
 const VirtualMessageList = lazy(() => 
@@ -32,8 +33,10 @@ export const ChatArea: React.FC = () => {
   const [isCreatingThread, setIsCreatingThread] = useState(false);
   const [showHelpTip, setShowHelpTip] = useState(false);
   const { showToast } = useToast();
+  const { userProfile } = useAuth();
 
   const selectedThread = conversationThreads.find(t => t.id === selectedThreadId);
+  const hasRoadmapData = !!userProfile?.company_info?.roadmap_data;
 
   // AI Chat integration - no longer pass threadId as prop
   const { 
@@ -221,6 +224,11 @@ export const ChatArea: React.FC = () => {
                 </h2>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
                   Medical Device Regulatory Expert • AI-Powered Compliance Assistant
+                  {hasRoadmapData && (
+                    <span className="ml-2 px-2 py-0.5 bg-green-100 dark:bg-green-900/30 text-green-800 dark:text-green-300 text-xs rounded-full">
+                      Using Your Roadmap
+                    </span>
+                  )}
                 </p>
               </div>
             </div>
@@ -324,9 +332,15 @@ export const ChatArea: React.FC = () => {
               <div className="flex items-start space-x-3">
                 <Info className="h-5 w-5 text-teal-600 dark:text-teal-400 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-teal-900 dark:text-teal-100 mb-1">Ask me anything about FDA regulations</h4>
+                  <h4 className="font-medium text-teal-900 dark:text-teal-100 mb-1">
+                    {hasRoadmapData 
+                      ? "Ask me about your specific regulatory needs" 
+                      : "Ask me anything about FDA regulations"}
+                  </h4>
                   <p className="text-sm text-teal-700 dark:text-teal-300">
-                    I can help with device classification, 510(k) requirements, QMS documentation, and more.
+                    {hasRoadmapData 
+                      ? `I can provide personalized guidance for your ${userProfile?.company_info?.device_info?.name || 'device'} based on your regulatory roadmap.` 
+                      : "I can help with device classification, 510(k) requirements, QMS documentation, and more."}
                   </p>
                   <button 
                     onClick={() => setShowHelpTip(false)}
@@ -365,6 +379,8 @@ export const ChatArea: React.FC = () => {
               ? "AI is responding..." 
               : isCreatingThread 
               ? "Setting up conversation..."
+              : hasRoadmapData
+              ? `Ask about your ${userProfile?.company_info?.device_info?.name || 'device'} regulatory requirements...`
               : "Ask about FDA regulations, generate QMS documents, or get compliance guidance..."
           }
           isStreaming={isStreaming}
