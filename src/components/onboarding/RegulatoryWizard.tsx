@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Shield, ChevronRight, ChevronLeft, CheckCircle, Building, FileText, AlertTriangle, Home, Info, Loader2 } from 'lucide-react';
+import { Shield, ChevronRight, ChevronLeft, CheckCircle, Building, FileText, AlertTriangle, Home, Info, Loader2, Download } from 'lucide-react';
 import { CompanyInformationForm } from './CompanyInformationForm';
 import { DeviceClassificationForm } from './DeviceClassificationForm';
 import { RegulatoryPathwayCard } from './RegulatoryPathwayCard';
@@ -558,22 +558,12 @@ export const RegulatoryWizard: React.FC = () => {
             </button>
           ) : (
             <button
-              onClick={handleFinish}
-              disabled={isLoading}
+              onClick={handleExportRoadmap}
               className="px-4 py-2 bg-teal-600 dark:bg-teal-700 text-white rounded-lg hover:bg-teal-700 dark:hover:bg-teal-600 transition-colors flex items-center space-x-2 disabled:opacity-50 disabled:cursor-not-allowed"
-              id="completeSetupButton"
+              id="exportRoadmapButton"
             >
-              {isLoading ? (
-                <>
-                  <Loader2 className="h-4 w-4 animate-spin mr-2" />
-                  <span>Saving...</span>
-                </>
-              ) : (
-                <>
-                  <CheckCircle className="h-4 w-4 mr-2" />
-                  <span>Complete Setup</span>
-                </>
-              )}
+              <Download className="h-4 w-4 mr-2" />
+              <span>Export Roadmap</span>
             </button>
           )}
         </div>
