@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Building, Shield, AlertTriangle, CheckCircle, Edit2, Home, Upload, FileText, Download, Clock } from 'lucide-react';
+import { Building, Shield, AlertTriangle, CheckCircle, Edit2, Home, Upload, FileText, Download, Clock, Trash2 } from 'lucide-react';
 import { useAuth } from '../auth/AuthProvider';
 import { useToast } from '../ui/Toast';
 
@@ -19,6 +19,7 @@ export const CompanySettings: React.FC = () => {
     address: ''
   });
   const [isUploading, setIsUploading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [roadmapFile, setRoadmapFile] = useState<File | null>(null);
   const [roadmapData, setRoadmapData] = useState<any>(null);
   const fileInputRef = React.useRef<HTMLInputElement>(null);
@@ -187,6 +188,51 @@ export const CompanySettings: React.FC = () => {
       message: 'Regulatory roadmap has been downloaded',
       duration: 3000
     });
+  };
+
+  // Handle clearing regulatory profile
+  const handleClearRegulatoryProfile = async () => {
+    if (!confirm("Are you sure you want to clear your regulatory profile? This will remove all device information and roadmap data.")) {
+      return;
+    }
+    
+    setIsClearing(true);
+    
+    try {
+      await updateProfile({
+        company_info: {
+          ...userProfile?.company_info,
+          roadmap_data: null,
+          onboarding_completed: false,
+          regulatory_profile_completed: false,
+          device_info: null,
+          classification: null,
+          regulatory_pathway: null,
+          compliance_roadmap: null
+        },
+        regulatory_profile_completed: false
+      });
+      
+      setRoadmapData(null);
+      
+      showToast({
+        type: 'success',
+        title: 'Profile Cleared',
+        message: 'Regulatory profile has been cleared successfully',
+        duration: 3000
+      });
+    } catch (error) {
+      console.error('Error clearing regulatory profile:', error);
+      
+      showToast({
+        type: 'error',
+        title: 'Clear Failed',
+        message: 'Failed to clear regulatory profile',
+        duration: 5000
+      });
+    } finally {
+      setIsClearing(false);
+    }
   };
 
   return (
@@ -402,8 +448,22 @@ export const CompanySettings: React.FC = () => {
           
           {/* Regulatory Profile Section */}
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg overflow-hidden">
-            <div className="p-6 border-b border-slate-200 dark:border-slate-700">
+            <div className="p-6 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
               <h2 className="text-xl font-semibold text-slate-900 dark:text-white">Regulatory Profile</h2>
+              {hasRegulatoryProfile && (
+                <button
+                  onClick={handleClearRegulatoryProfile}
+                  disabled={isClearing}
+                  className="px-3 py-1.5 bg-red-100 dark:bg-red-900/50 text-red-700 dark:text-red-300 rounded-lg hover:bg-red-200 dark:hover:bg-red-800/50 transition-colors flex items-center space-x-1 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isClearing ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-700 dark:border-red-300"></div>
+                  ) : (
+                    <Trash2 className="h-4 w-4" />
+                  )}
+                  <span>Clear All</span>
+                </button>
+              )}
             </div>
             
             <div className="p-6">
