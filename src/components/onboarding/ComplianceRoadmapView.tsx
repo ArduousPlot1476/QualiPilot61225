@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { CheckCircle, FileText, Download, Eye, Shield, Clock, AlertTriangle, ExternalLink, Info } from 'lucide-react';
+import { CheckCircle, Download, Eye, Shield, Clock, AlertTriangle, ExternalLink, Info } from 'lucide-react';
 import { DocumentGeneratorService } from '../../lib/ai/documentGenerator';
 import { useToast } from '../ui/Toast';
 

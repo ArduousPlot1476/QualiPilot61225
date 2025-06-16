@@ -272,16 +272,148 @@ export const RegulatoryWizard: React.FC = () => {
   };
 
   const handleExportRoadmap = () => {
-    // Create a JSON file with the roadmap data
+    // Create a comprehensive JSON file with all roadmap data
     const roadmapData = {
-      companyInfo,
-      deviceInfo,
-      classification: deviceClassification,
-      pathway: selectedPathway,
-      roadmap: complianceRoadmap,
-      generatedDate: new Date().toISOString()
+      // Company Information
+      companyInfo: {
+        legalName: companyInfo.legalName,
+        dunsNumber: companyInfo.dunsNumber,
+        annualRevenue: companyInfo.annualRevenue,
+        employeeCount: companyInfo.employeeCount,
+        qmsStatus: companyInfo.qmsStatus,
+        priorSubmissions: companyInfo.priorSubmissions,
+        certifications: companyInfo.certifications,
+        contactName: companyInfo.contactName,
+        contactEmail: companyInfo.contactEmail || user?.email,
+        contactPhone: companyInfo.contactPhone,
+        address: companyInfo.address,
+        establishmentNumber: companyInfo.establishmentNumber
+      },
+      
+      // Device Information
+      deviceInfo: {
+        name: deviceInfo.name,
+        classification: deviceInfo.classification,
+        productCode: deviceInfo.productCode,
+        regulationNumber: deviceInfo.regulationNumber
+      },
+      
+      // Classification Details
+      classification: {
+        device_class: deviceClassification.device_class,
+        product_code: deviceClassification.product_code,
+        submission_type: deviceClassification.submission_type,
+        definition: deviceClassification.definition,
+        guidance_documents: deviceClassification.guidance_documents,
+        predicate_devices: deviceClassification.predicate_devices
+      },
+      
+      // Regulatory Pathway
+      pathway: {
+        name: selectedPathway,
+        timeline: getPathwayTimeline(selectedPathway),
+        cost: getPathwayCost(selectedPathway),
+        requirements: getPathwayRequirements(selectedPathway, deviceClassification.device_class),
+        keyMilestones: getPathwayMilestones(selectedPathway),
+        nextSteps: [
+          "Conduct predicate device search",
+          "Prepare technical documentation",
+          "Engage with FDA through pre-submission meeting",
+          "Submit regulatory application"
+        ]
+      },
+      
+      // Compliance Roadmap - Regulatory Overview
+      regulatoryOverview: {
+        applicableRegulations: complianceRoadmap.applicableRegulations,
+        requiredStandards: complianceRoadmap.requiredStandards,
+        testingProtocols: complianceRoadmap.testingProtocols,
+        qualitySystemRequirements: complianceRoadmap.qualitySystemRequirements,
+        clinicalEvidenceNeeds: complianceRoadmap.clinicalEvidenceNeeds,
+        postMarketSurveillance: complianceRoadmap.postMarketSurveillance
+      },
+      
+      // Required Documents
+      documents: complianceRoadmap.documentTemplates.map((template: any) => ({
+        name: template.name,
+        description: template.description,
+        required: template.required,
+        templateId: template.templateId,
+        sections: getDocumentSections(template.templateId)
+      })),
+      
+      // Submission Timeline
+      timeline: {
+        phases: [
+          {
+            name: "Planning & Preparation",
+            duration: "1-2 months",
+            description: "Develop regulatory strategy, identify predicate devices, and conduct gap analysis",
+            tasks: [
+              "Identify regulatory requirements",
+              "Develop project plan",
+              "Assemble regulatory team",
+              "Conduct preliminary gap analysis"
+            ]
+          },
+          {
+            name: "Design & Development",
+            duration: "3-6 months",
+            description: "Complete design controls, risk management, and verification activities",
+            tasks: [
+              "Finalize design specifications",
+              "Implement design controls",
+              "Conduct risk analysis",
+              "Develop verification protocols"
+            ]
+          },
+          {
+            name: "Testing & Validation",
+            duration: "2-4 months",
+            description: "Conduct verification and validation testing according to protocols",
+            tasks: [
+              "Execute verification testing",
+              "Conduct validation studies",
+              "Perform biocompatibility testing (if applicable)",
+              "Complete software validation (if applicable)"
+            ]
+          },
+          {
+            name: "Submission Preparation",
+            duration: "1-2 months",
+            description: "Compile all documentation and prepare submission package",
+            tasks: [
+              "Compile test reports",
+              "Prepare submission documents",
+              "Conduct internal review",
+              "Finalize submission package"
+            ]
+          },
+          {
+            name: "FDA Review",
+            duration: selectedPathway === 'PMA' ? '6-12 months' : '3-6 months',
+            description: "FDA reviews submission and may request additional information",
+            tasks: [
+              "Submit application to FDA",
+              "Respond to FDA questions",
+              "Provide additional information if requested",
+              "Prepare for potential facility inspection"
+            ]
+          }
+        ],
+        reviewProcess: getReviewProcess(selectedPathway),
+        estimatedTotalTime: getEstimatedTotalTime(selectedPathway)
+      },
+      
+      // Metadata
+      metadata: {
+        generatedDate: new Date().toISOString(),
+        version: "1.0",
+        wizardCompletionDate: new Date().toISOString()
+      }
     };
     
+    // Create and download JSON file
     const blob = new Blob([JSON.stringify(roadmapData, null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
@@ -295,9 +427,194 @@ export const RegulatoryWizard: React.FC = () => {
     showToast({
       type: 'success',
       title: 'Roadmap Exported',
-      message: 'Regulatory roadmap has been exported',
+      message: 'Regulatory roadmap has been exported as JSON',
       duration: 3000
     });
+    
+    // Redirect to dashboard after export
+    setTimeout(() => {
+      navigate('/dashboard');
+    }, 1000);
+  };
+
+  // Helper functions for export data
+  const getPathwayTimeline = (pathway: string): string => {
+    switch(pathway) {
+      case 'PMA': return '1-3 years';
+      case '510(k)': return '6-12 months';
+      case 'De Novo': return '9-12 months';
+      case 'Exempt': return '1-3 months';
+      default: return '6-12 months';
+    }
+  };
+  
+  const getPathwayCost = (pathway: string): string => {
+    switch(pathway) {
+      case 'PMA': return '$500,000 - $2,000,000';
+      case '510(k)': return '$50,000 - $200,000';
+      case 'De Novo': return '$100,000 - $500,000';
+      case 'Exempt': return '$5,000 - $20,000';
+      default: return '$50,000 - $200,000';
+    }
+  };
+  
+  const getPathwayRequirements = (pathway: string, deviceClass: string): string[] => {
+    const pathwayOption = pathwayOptions.find(p => p.name === pathway);
+    return pathwayOption?.requirements || [];
+  };
+  
+  const getPathwayMilestones = (pathway: string): any[] => {
+    return [
+      {
+        phase: 'Planning & Preparation',
+        duration: '1-2 months',
+        deliverables: [
+          'Regulatory strategy document',
+          'Project plan',
+          'Gap analysis report'
+        ]
+      },
+      {
+        phase: 'Design & Development',
+        duration: '3-6 months',
+        deliverables: [
+          'Design documentation',
+          'Risk management file',
+          'Verification protocols'
+        ]
+      },
+      {
+        phase: 'Testing & Validation',
+        duration: '2-4 months',
+        deliverables: [
+          'Test reports',
+          'Validation documentation',
+          'Clinical data (if applicable)'
+        ]
+      },
+      {
+        phase: 'Submission Preparation',
+        duration: '1-2 months',
+        deliverables: [
+          'Complete submission package',
+          'Technical documentation',
+          'Labeling and instructions for use'
+        ]
+      },
+      {
+        phase: 'FDA Review',
+        duration: pathway === 'PMA' ? '6-12 months' : '3-6 months',
+        deliverables: [
+          'Responses to FDA questions',
+          'Additional testing (if requested)',
+          'FDA clearance/approval'
+        ]
+      }
+    ];
+  };
+  
+  const getDocumentSections = (templateId: string): any[] => {
+    // Return document sections based on template ID
+    switch(templateId) {
+      case 'qms_manual':
+        return [
+          { title: 'Management Responsibility', required: true },
+          { title: 'Resource Management', required: true },
+          { title: 'Product Realization', required: true },
+          { title: 'Measurement, Analysis and Improvement', required: true }
+        ];
+      case 'risk_management':
+        return [
+          { title: 'Risk Management Process', required: true },
+          { title: 'Risk Analysis', required: true },
+          { title: 'Risk Evaluation', required: true },
+          { title: 'Risk Control', required: true },
+          { title: 'Evaluation of Overall Residual Risk', required: true },
+          { title: 'Risk Management Report', required: true }
+        ];
+      case '510k_submission':
+        return [
+          { title: 'Administrative Information', required: true },
+          { title: 'Device Description', required: true },
+          { title: 'Substantial Equivalence Discussion', required: true },
+          { title: 'Proposed Labeling', required: true },
+          { title: 'Performance Testing', required: true },
+          { title: 'Sterilization Information', required: deviceInfo.classification !== 'I' }
+        ];
+      default:
+        return [
+          { title: 'Introduction', required: true },
+          { title: 'Scope', required: true },
+          { title: 'Requirements', required: true },
+          { title: 'Implementation', required: true },
+          { title: 'Verification', required: true }
+        ];
+    }
+  };
+  
+  const getReviewProcess = (pathway: string): any => {
+    switch(pathway) {
+      case '510(k)':
+        return {
+          steps: [
+            'Administrative review (15 days)',
+            'Substantive review (60-75 days)',
+            'Interactive review (as needed)',
+            'Final decision'
+          ],
+          targetTimeframe: '90 days',
+          guidanceUrl: 'https://www.fda.gov/medical-devices/premarket-submissions/premarket-notification-510k'
+        };
+      case 'PMA':
+        return {
+          steps: [
+            'Administrative and filing review (45 days)',
+            'Substantive review (180 days)',
+            'Advisory panel meeting (if needed)',
+            'Final decision'
+          ],
+          targetTimeframe: '180-365 days',
+          guidanceUrl: 'https://www.fda.gov/medical-devices/premarket-submissions/premarket-approval-pma'
+        };
+      case 'De Novo':
+        return {
+          steps: [
+            'Acceptance review (15 days)',
+            'Substantive review (120 days)',
+            'Interactive review (as needed)',
+            'Final decision'
+          ],
+          targetTimeframe: '150 days',
+          guidanceUrl: 'https://www.fda.gov/medical-devices/premarket-submissions/de-novo-classification-request'
+        };
+      case 'Exempt':
+        return {
+          steps: [
+            'Establishment registration',
+            'Device listing',
+            'Quality System compliance',
+            'Labeling requirements'
+          ],
+          targetTimeframe: 'N/A (no FDA review required)',
+          guidanceUrl: 'https://www.fda.gov/medical-devices/classify-your-medical-device/class-i-exempt-devices'
+        };
+      default:
+        return {
+          steps: ['Contact FDA for guidance'],
+          targetTimeframe: 'Varies',
+          guidanceUrl: 'https://www.fda.gov/medical-devices/overview-device-regulation'
+        };
+    }
+  };
+  
+  const getEstimatedTotalTime = (pathway: string): string => {
+    switch(pathway) {
+      case 'PMA': return '18-36 months';
+      case '510(k)': return '12-18 months';
+      case 'De Novo': return '15-24 months';
+      case 'Exempt': return '3-6 months';
+      default: return '12-18 months';
+    }
   };
 
   // Return to home/dashboard
@@ -440,7 +757,6 @@ export const RegulatoryWizard: React.FC = () => {
               name: companyInfo.legalName,
               contact: companyInfo.contactName
             }}
-            onExport={handleExportRoadmap}
           />
         );
       default:
