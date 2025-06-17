@@ -1,5 +1,6 @@
 import React from 'react';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
+import { useAuth } from '../auth/AuthProvider';
 
 interface QuickRepliesProps {
   onQuickReply: (reply: string) => void;
@@ -7,15 +8,21 @@ interface QuickRepliesProps {
 }
 
 export const QuickReplies: React.FC<QuickRepliesProps> = ({ onQuickReply, visible = true }) => {
+  const { userProfile } = useAuth();
+  
+  // Get device name from user profile if available
+  const deviceName = userProfile?.company_info?.device_info?.name || 'my medical device';
+  
+  // Personalized quick replies that reference the user's specific device
   const quickReplies = [
-    'Explain ISO 13485 requirements',
-    'What are the key requirements for FDA 510(k) submission?',
-    'How do I classify my medical device?',
-    'What is the difference between Class I, II, and III devices?',
-    'What documentation is needed for a PMA application?',
-    'Explain design controls for medical devices',
-    'What are the QMS requirements for medical devices?',
-    'How do I implement risk management per ISO 14971?'
+    `Explain ISO 13485 requirements for ${deviceName}`,
+    `What are the key requirements for FDA 510(k) submission for ${deviceName}?`,
+    `How do I classify ${deviceName}?`,
+    `What is the difference between Class I, II, and III devices for ${deviceName}?`,
+    `What documentation is needed for a PMA application for ${deviceName}?`,
+    `Explain design controls for ${deviceName}`,
+    `What are the QMS requirements for ${deviceName}?`,
+    `How do I implement risk management per ISO 14971 for ${deviceName}?`
   ];
 
   if (!visible) return null;
