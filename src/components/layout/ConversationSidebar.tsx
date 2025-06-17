@@ -4,7 +4,6 @@ import { useAppStore } from '../../store/appStore';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
 import { EmptyState } from '../ui/EmptyState';
 import { FocusableElement } from '../ui/FocusableElement';
-import { ChatService } from '../../lib/ai/chatService';
 import { useOptimisticUpdates } from '../../hooks/useOptimisticUpdates';
 import { useToast } from '../ui/Toast';
 import { ConversationThread } from '../../types';
@@ -93,8 +92,8 @@ export const ConversationSidebar: React.FC = () => {
       // Create a new thread with a default title
       const title = "New Conversation";
       
-      // Optimistically add the thread to the UI
-      await createThread({
+      // Create the thread optimistically and get the optimistic ID
+      const optimisticId = await createThread({
         title,
         lastMessage: "Start a new conversation",
         timestamp: new Date(),
@@ -102,12 +101,8 @@ export const ConversationSidebar: React.FC = () => {
         isSaved: false
       });
       
-      // The actual API call is queued by useOptimisticUpdates
-      // and will be executed in the background
-      const newThread = await ChatService.createThread(title);
-      
-      // Select the new thread
-      setSelectedThread(newThread.id);
+      // Select the new thread using the optimistic ID
+      setSelectedThread(optimisticId);
       
       showToast({
         type: 'success',
@@ -146,11 +141,8 @@ export const ConversationSidebar: React.FC = () => {
     }
     
     try {
-      // Optimistically update the thread title in the UI
+      // Update the thread title optimistically
       await updateThread(id, { title: editTitle });
-      
-      // The actual API call is queued by useOptimisticUpdates
-      await ChatService.updateThreadTitle(id, editTitle);
       
       showToast({
         type: 'success',
@@ -177,11 +169,8 @@ export const ConversationSidebar: React.FC = () => {
 
   const confirmDeleteThread = async (id: string) => {
     try {
-      // Optimistically remove the thread from the UI
+      // Delete the thread optimistically
       await deleteThread(id);
-      
-      // The actual API call is queued by useOptimisticUpdates
-      await ChatService.deleteThread(id);
       
       // If the deleted thread was selected, select another thread
       if (id === selectedThreadId) {
@@ -216,11 +205,8 @@ export const ConversationSidebar: React.FC = () => {
 
   const handleToggleSave = async (id: string, isSaved: boolean) => {
     try {
-      // Optimistically update the saved status in the UI
+      // Update the saved status optimistically
       await updateThread(id, { isSaved: !isSaved });
-      
-      // The actual API call is queued by useOptimisticUpdates
-      await ChatService.updateThreadSaved(id, !isSaved);
       
       showToast({
         type: 'success',

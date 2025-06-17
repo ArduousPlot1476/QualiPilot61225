@@ -10,7 +10,7 @@ interface OptimisticState<T> {
 
 interface UseOptimisticUpdatesReturn<T> {
   data: T[];
-  createItem: (item: Omit<T, 'id'>) => Promise<void>;
+  createItem: (item: Omit<T, 'id'>) => Promise<string>;
   updateItem: (id: string, updates: Partial<T>) => Promise<void>;
   deleteItem: (id: string) => Promise<void>;
   isOptimistic: (id: string) => boolean;
@@ -53,7 +53,7 @@ export function useOptimisticUpdates<T extends { id: string }>(
     return [...realData, ...optimisticData];
   }, [state.data, state.optimisticItems, state.pendingOperations]);
 
-  const createItem = useCallback(async (item: Omit<T, 'id'>) => {
+  const createItem = useCallback(async (item: Omit<T, 'id'>): Promise<string> => {
     const optimisticId = `optimistic_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
     const optimisticItem = { ...item, id: optimisticId } as T;
 
@@ -65,7 +65,7 @@ export function useOptimisticUpdates<T extends { id: string }>(
     }));
 
     try {
-      // Queue for sync
+      // Queue for sync - the sync manager will handle the actual API call
       await queueOperation('create', table, item, optimisticId);
 
       // Set rollback timeout
@@ -81,6 +81,9 @@ export function useOptimisticUpdates<T extends { id: string }>(
 
       rollbackTimeouts.current.set(optimisticId, timeoutId);
 
+      // Return the optimistic ID so the caller can use it
+      return optimisticId;
+
     } catch (error) {
       // Rollback on immediate failure
       rollbackItem(optimisticId);
@@ -95,6 +98,20 @@ export function useOptimisticUpdates<T extends { id: string }>(
   }, [queueOperation, table, showToast]);
 
   const updateItem = useCallback(async (id: string, updates: Partial<T>) => {
+    // Don't make API calls for optimistic items - they don't exist in the database yet
+    if (id.startsWith('optimistic_')) {
+      // Just update the optimistic item locally
+      const existingItem = state.optimisticItems.get(id);
+      if (existingItem) {
+        const updatedItem = { ...existingItem, ...updates };
+        setState(prev => ({
+          ...prev,
+          optimisticItems: new Map(prev.optimisticItems).set(id, updatedItem)
+        }));
+      }
+      return;
+    }
+
     const existingItem = state.data.find(item => item.id === id) || 
                         state.optimisticItems.get(id);
     
@@ -140,6 +157,25 @@ export function useOptimisticUpdates<T extends { id: string }>(
   }, [state.data, state.optimisticItems, queueOperation, table, showToast]);
 
   const deleteItem = useCallback(async (id: string) => {
+    // Don't make API calls for optimistic items - they don't exist in the database yet
+    if (id.startsWith('optimistic_')) {
+      // Just remove the optimistic item locally
+      setState(prev => {
+        const newOptimisticItems = new Map(prev.optimisticItems);
+        const newPendingOperations = new Map(prev.pendingOperations);
+        
+        newOptimisticItems.delete(id);
+        newPendingOperations.delete(id);
+
+        return {
+          ...prev,
+          optimisticItems: newOptimisticItems,
+          pendingOperations: newPendingOperations
+        };
+      });
+      return;
+    }
+
     // Mark as pending delete (hide from UI)
     setState(prev => ({
       ...prev,
