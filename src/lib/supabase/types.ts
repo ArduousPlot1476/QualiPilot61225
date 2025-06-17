@@ -15,18 +15,21 @@ export interface Database {
           email: string
           created_at: string
           company_info: Json
+          regulatory_profile_completed: boolean
         }
         Insert: {
           id?: string
           email: string
           created_at?: string
           company_info?: Json
+          regulatory_profile_completed?: boolean
         }
         Update: {
           id?: string
           email?: string
           created_at?: string
           company_info?: Json
+          regulatory_profile_completed?: boolean
         }
         Relationships: []
       }
@@ -105,6 +108,10 @@ export interface Database {
           content: string | null
           metadata: Json
           created_at: string
+          template_id: string | null
+          generation_metadata: Json
+          validation_results: Json | null
+          compliance_report: Json | null
         }
         Insert: {
           id?: string
@@ -115,6 +122,10 @@ export interface Database {
           content?: string | null
           metadata?: Json
           created_at?: string
+          template_id?: string | null
+          generation_metadata?: Json
+          validation_results?: Json | null
+          compliance_report?: Json | null
         }
         Update: {
           id?: string
@@ -125,6 +136,10 @@ export interface Database {
           content?: string | null
           metadata?: Json
           created_at?: string
+          template_id?: string | null
+          generation_metadata?: Json
+          validation_results?: Json | null
+          compliance_report?: Json | null
         }
         Relationships: [
           {

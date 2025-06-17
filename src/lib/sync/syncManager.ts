@@ -18,6 +18,13 @@ interface SyncState {
   lastSyncTime: number;
 }
 
+// Define allowed columns for each table to prevent schema mismatches
+const ALLOWED_COLUMNS = {
+  threads: ['id', 'user_id', 'title', 'created_at', 'updated_at'],
+  messages: ['id', 'thread_id', 'content', 'role', 'created_at', 'citations'],
+  documents: ['id', 'user_id', 'title', 'type', 'status', 'content', 'metadata', 'created_at', 'template_id', 'generation_metadata', 'validation_results', 'compliance_report']
+};
+
 export class SyncManager {
   private static instance: SyncManager;
   private state: SyncState = {
@@ -43,6 +50,22 @@ export class SyncManager {
       SyncManager.instance = new SyncManager();
     }
     return SyncManager.instance;
+  }
+
+  // Filter data to only include columns that exist in the database schema
+  private filterDataForTable(table: 'threads' | 'messages' | 'documents', data: any): any {
+    if (!data || typeof data !== 'object') return data;
+    
+    const allowedColumns = ALLOWED_COLUMNS[table];
+    const filteredData: any = {};
+    
+    for (const key of Object.keys(data)) {
+      if (allowedColumns.includes(key)) {
+        filteredData[key] = data[key];
+      }
+    }
+    
+    return filteredData;
   }
 
   // IndexedDB initialization for offline storage
@@ -134,11 +157,14 @@ export class SyncManager {
     data: any,
     optimisticId?: string
   ): Promise<string> {
+    // Filter data to match database schema
+    const filteredData = this.filterDataForTable(table, data);
+    
     const operation: PendingOperation = {
       id: Math.random().toString(36).substr(2, 9),
       type,
       table,
-      data,
+      data: filteredData,
       timestamp: Date.now(),
       retryCount: 0,
       optimisticId
@@ -235,11 +261,15 @@ export class SyncManager {
   }
 
   private async executeThreadOperation(type: string, data: any): Promise<any> {
+    // Filter data to ensure only valid columns are used
+    const filteredData = this.filterDataForTable('threads', data);
+    
     switch (type) {
       case 'create':
-        return supabase.from('threads').insert(data).select().single();
+        return supabase.from('threads').insert(filteredData).select().single();
       case 'update':
-        return supabase.from('threads').update(data.updates).eq('id', data.id).select().single();
+        const updateData = this.filterDataForTable('threads', data.updates || data);
+        return supabase.from('threads').update(updateData).eq('id', data.id).select().single();
       case 'delete':
         return supabase.from('threads').delete().eq('id', data.id);
       default:
@@ -248,11 +278,15 @@ export class SyncManager {
   }
 
   private async executeMessageOperation(type: string, data: any): Promise<any> {
+    // Filter data to ensure only valid columns are used
+    const filteredData = this.filterDataForTable('messages', data);
+    
     switch (type) {
       case 'create':
-        return supabase.from('messages').insert(data).select().single();
+        return supabase.from('messages').insert(filteredData).select().single();
       case 'update':
-        return supabase.from('messages').update(data.updates).eq('id', data.id).select().single();
+        const updateData = this.filterDataForTable('messages', data.updates || data);
+        return supabase.from('messages').update(updateData).eq('id', data.id).select().single();
       case 'delete':
         return supabase.from('messages').delete().eq('id', data.id);
       default:
@@ -261,11 +295,15 @@ export class SyncManager {
   }
 
   private async executeDocumentOperation(type: string, data: any): Promise<any> {
+    // Filter data to ensure only valid columns are used
+    const filteredData = this.filterDataForTable('documents', data);
+    
     switch (type) {
       case 'create':
-        return supabase.from('documents').insert(data).select().single();
+        return supabase.from('documents').insert(filteredData).select().single();
       case 'update':
-        return supabase.from('documents').update(data.updates).eq('id', data.id).select().single();
+        const updateData = this.filterDataForTable('documents', data.updates || data);
+        return supabase.from('documents').update(updateData).eq('id', data.id).select().single();
       case 'delete':
         return supabase.from('documents').delete().eq('id', data.id);
       default:
