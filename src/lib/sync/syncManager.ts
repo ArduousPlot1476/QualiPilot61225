@@ -20,7 +20,7 @@ interface SyncState {
 
 // Define allowed columns for each table to prevent schema mismatches
 const ALLOWED_COLUMNS = {
-  threads: ['id', 'user_id', 'title', 'created_at', 'updated_at'],
+  threads: ['id', 'user_id', 'title', 'created_at', 'updated_at', 'is_saved'],
   messages: ['id', 'thread_id', 'content', 'role', 'created_at', 'citations'],
   documents: ['id', 'user_id', 'title', 'type', 'status', 'content', 'metadata', 'created_at', 'template_id', 'generation_metadata', 'validation_results', 'compliance_report']
 };

@@ -40,6 +40,7 @@ export interface Database {
           title: string
           created_at: string
           updated_at: string
+          is_saved: boolean
         }
         Insert: {
           id?: string
@@ -47,6 +48,7 @@ export interface Database {
           title: string
           created_at?: string
           updated_at?: string
+          is_saved?: boolean
         }
         Update: {
           id?: string
@@ -54,6 +56,7 @@ export interface Database {
           title?: string
           created_at?: string
           updated_at?: string
+          is_saved?: boolean
         }
         Relationships: [
           {

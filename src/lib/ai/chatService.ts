@@ -193,6 +193,26 @@ export class ChatService {
     }
   }
 
+  static async updateThreadSaved(threadId: string, isSaved: boolean) {
+    try {
+      const { data, error } = await supabase
+        .from('threads')
+        .update({ is_saved: isSaved })
+        .eq('id', threadId)
+        .select()
+        .single();
+
+      if (error) {
+        throw new Error(`Failed to update thread saved status: ${error.message}`);
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error updating thread saved status:', error);
+      throw error;
+    }
+  }
+
   static async deleteThread(threadId: string) {
     try {
       const { error } = await supabase

@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Search, MessageCircle, Trash2, Edit2, AlertTriangle } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Search, MessageCircle, Trash2, Edit2, AlertTriangle, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
 import { EmptyState } from '../ui/EmptyState';
@@ -24,6 +24,7 @@ export const ConversationSidebar: React.FC = () => {
   const [editTitle, setEditTitle] = useState('');
   const [isDeleting, setIsDeleting] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const [filter, setFilter] = useState<'all' | 'saved'>('all');
   const editInputRef = useRef<HTMLInputElement>(null);
   const searchInputRef = useRef<HTMLInputElement>(null);
   const { showToast } = useToast();
@@ -62,10 +63,17 @@ export const ConversationSidebar: React.FC = () => {
     loadThreads();
   }, [showToast]);
 
-  const filteredThreads = optimisticThreads.filter(thread =>
-    thread.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    thread.lastMessage.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const filteredThreads = optimisticThreads
+    .filter(thread => {
+      // Apply saved filter if needed
+      if (filter === 'saved' && !thread.isSaved) {
+        return false;
+      }
+      
+      // Apply search filter
+      return thread.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (thread.lastMessage && thread.lastMessage.toLowerCase().includes(searchTerm.toLowerCase()));
+    });
 
   const formatTime = (timestamp: Date) => {
     const now = new Date();
@@ -90,7 +98,8 @@ export const ConversationSidebar: React.FC = () => {
         title,
         lastMessage: "Start a new conversation",
         timestamp: new Date(),
-        unreadCount: 0
+        unreadCount: 0,
+        isSaved: false
       });
       
       // The actual API call is queued by useOptimisticUpdates
@@ -205,6 +214,31 @@ export const ConversationSidebar: React.FC = () => {
     setIsDeleting(null);
   };
 
+  const handleToggleSave = async (id: string, isSaved: boolean) => {
+    try {
+      // Optimistically update the saved status in the UI
+      await updateThread(id, { isSaved: !isSaved });
+      
+      // The actual API call is queued by useOptimisticUpdates
+      await ChatService.updateThreadSaved(id, !isSaved);
+      
+      showToast({
+        type: 'success',
+        title: isSaved ? 'Conversation Unsaved' : 'Conversation Saved',
+        message: isSaved ? 'Removed from saved conversations' : 'Added to saved conversations',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('Failed to update saved status:', error);
+      showToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: error instanceof Error ? error.message : 'Could not update saved status',
+        duration: 5000
+      });
+    }
+  };
+
   // Handle keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -295,6 +329,30 @@ export const ConversationSidebar: React.FC = () => {
               aria-label="Search conversations"
             />
           </div>
+          
+          {/* Filter tabs */}
+          <div className="flex mt-3 border-b border-slate-200 dark:border-slate-700">
+            <button
+              onClick={() => setFilter('all')}
+              className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
+                filter === 'all' 
+                  ? 'border-teal-500 text-teal-600 dark:text-teal-400' 
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setFilter('saved')}
+              className={`flex-1 py-2 text-sm font-medium border-b-2 transition-colors ${
+                filter === 'saved' 
+                  ? 'border-teal-500 text-teal-600 dark:text-teal-400' 
+                  : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
+              }`}
+            >
+              Saved
+            </button>
+          </div>
         </div>
       </TransitionWrapper>
 
@@ -337,6 +395,11 @@ export const ConversationSidebar: React.FC = () => {
                   {thread.unreadCount > 0 && (
                     <div className="absolute -top-1 -right-1 bg-green-500 dark:bg-green-400 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-medium">
                       {thread.unreadCount > 9 ? '9+' : thread.unreadCount}
+                    </div>
+                  )}
+                  {thread.isSaved && (
+                    <div className="absolute bottom-0 right-0 bg-teal-500 dark:bg-teal-400 text-white rounded-full p-1">
+                      <BookmarkCheck className="h-3 w-3" />
                     </div>
                   )}
                 </FocusableElement>
@@ -462,6 +525,25 @@ export const ConversationSidebar: React.FC = () => {
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
+                            handleToggleSave(thread.id, thread.isSaved || false);
+                          }}
+                          className={`p-1 rounded transition-colors focus-ring ${
+                            thread.isSaved
+                              ? 'text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20'
+                              : 'text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20'
+                          }`}
+                          aria-label={thread.isSaved ? "Unsave conversation" : "Save conversation"}
+                          title={thread.isSaved ? "Unsave conversation" : "Save conversation"}
+                        >
+                          {thread.isSaved ? (
+                            <BookmarkCheck className="h-3.5 w-3.5" />
+                          ) : (
+                            <Bookmark className="h-3.5 w-3.5" />
+                          )}
+                        </button>
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
                             handleEditThread(thread.id, thread.title);
                           }}
                           className="p-1 text-slate-500 dark:text-slate-400 hover:text-teal-600 dark:hover:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20 rounded transition-colors focus-ring"
@@ -503,6 +585,7 @@ export const ConversationSidebar: React.FC = () => {
           <div className="text-center">
             <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
               {filteredThreads.length} conversation{filteredThreads.length !== 1 ? 's' : ''}
+              {filter === 'saved' ? ' saved' : ''}
             </p>
             <button 
               onClick={handleNewThread}

@@ -55,7 +55,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         {
           ...thread,
           id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date()
+          timestamp: new Date(),
+          isSaved: thread.isSaved || false
         },
         ...state.threads
       ],
@@ -63,7 +64,8 @@ export const useAppStore = create<AppState>((set, get) => ({
         {
           ...thread,
           id: Math.random().toString(36).substr(2, 9),
-          timestamp: new Date()
+          timestamp: new Date(),
+          isSaved: thread.isSaved || false
         },
         ...state.conversationThreads
       ]

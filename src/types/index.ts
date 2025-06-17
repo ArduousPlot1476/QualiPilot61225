@@ -44,6 +44,7 @@ export interface ConversationThread {
   lastMessage: string;
   timestamp: Date;
   unreadCount: number;
+  isSaved?: boolean;
 }
 
 export interface RegulatoryDocument {
