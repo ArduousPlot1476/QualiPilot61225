@@ -99,6 +99,11 @@ export const AlertsTab: React.FC = () => {
 
   // Get alert link based on alert type and content
   const getAlertLink = (alert: any) => {
+    // If the alert has a source URL, use it
+    if (alert.sourceUrl) {
+      return alert.sourceUrl;
+    }
+    
     // Default links based on alert type
     const defaultLinks = {
       'regulatory_change': 'https://www.fda.gov/medical-devices/medical-device-safety',
