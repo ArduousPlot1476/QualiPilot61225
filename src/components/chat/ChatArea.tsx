@@ -1,5 +1,5 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
-import { Bot, Send, Square, Info } from 'lucide-react';
+import { Bot, Send, Square, Info, Bookmark, BookmarkCheck } from 'lucide-react';
 import { useAppStore } from '../../store/appStore';
 import { MessageInput } from '../chat/MessageInput';
 import { QuickReplies } from '../chat/QuickReplies';
@@ -27,7 +27,8 @@ export const ChatArea: React.FC = () => {
     selectedThreadId,
     setSelectedThread,
     toggleContextDrawer,
-    addGeneratedDoc
+    addGeneratedDoc,
+    updateThread
   } = useAppStore();
 
   const [isCreatingThread, setIsCreatingThread] = useState(false);
@@ -208,6 +209,36 @@ export const ChatArea: React.FC = () => {
     }
   }, [aiError, clearAIError]);
 
+  // Toggle save status for the current thread
+  const handleToggleSave = async () => {
+    if (!selectedThreadId || selectedThreadId === '1' || !selectedThread) return;
+    
+    try {
+      const isSaved = selectedThread.isSaved || false;
+      
+      // Update in the store
+      updateThread(selectedThreadId, { isSaved: !isSaved });
+      
+      // Update in the database
+      await ChatService.updateThreadSaved(selectedThreadId, !isSaved);
+      
+      showToast({
+        type: 'success',
+        title: isSaved ? 'Conversation Unsaved' : 'Conversation Saved',
+        message: isSaved ? 'Removed from saved conversations' : 'Added to saved conversations',
+        duration: 2000
+      });
+    } catch (error) {
+      console.error('Failed to update saved status:', error);
+      showToast({
+        type: 'error',
+        title: 'Update Failed',
+        message: 'Could not update saved status',
+        duration: 5000
+      });
+    }
+  };
+
   return (
     <ErrorBoundary>
       <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 relative">
@@ -249,6 +280,31 @@ export const ChatArea: React.FC = () => {
                   <span className="text-xs font-medium text-blue-700 dark:text-blue-300">AI Responding</span>
                 </div>
               </TransitionWrapper>
+              
+              {/* Save Conversation Button */}
+              {selectedThreadId && selectedThreadId !== '1' && (
+                <button
+                  onClick={handleToggleSave}
+                  className={`px-4 py-2 text-sm font-medium rounded-lg transition-colors duration-200 focus-ring hover-scale flex items-center space-x-2 ${
+                    selectedThread?.isSaved
+                      ? 'bg-yellow-50 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-100 dark:hover:bg-yellow-800/30'
+                      : 'bg-slate-50 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-600'
+                  }`}
+                  title={selectedThread?.isSaved ? "Unsave conversation" : "Save conversation"}
+                >
+                  {selectedThread?.isSaved ? (
+                    <>
+                      <BookmarkCheck className="h-4 w-4" />
+                      <span>Saved</span>
+                    </>
+                  ) : (
+                    <>
+                      <Bookmark className="h-4 w-4" />
+                      <span>Save</span>
+                    </>
+                  )}
+                </button>
+              )}
               
               <ContextualHelp
                 title="Context Panel"
