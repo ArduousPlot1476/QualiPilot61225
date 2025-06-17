@@ -3,7 +3,7 @@ import { useAuth } from '../components/auth/AuthProvider';
 import { createAlertInDB } from '../lib/realtime/alertSubscription';
 import { useToast } from '../components/ui/Toast';
 import { Button } from '../components/ui/Button';
-import { AlertTriangle, Bell, Shield, Info } from 'lucide-react';
+import { AlertTriangle, Bell, Shield, Info, Link } from 'lucide-react';
 
 export const TestAlertsPage: React.FC = () => {
   const { user } = useAuth();
@@ -14,7 +14,8 @@ export const TestAlertsPage: React.FC = () => {
     title: '',
     message: '',
     severity: 'medium' as 'low' | 'medium' | 'high' | 'critical',
-    cfr_references: ''
+    cfr_references: '',
+    source_url: '' // Added source URL field
   });
 
   const handleInputChange = (field: string, value: string) => {
@@ -54,7 +55,8 @@ export const TestAlertsPage: React.FC = () => {
       
       await createAlertInDB(user.id, {
         ...alertForm,
-        cfr_references
+        cfr_references,
+        source_url: alertForm.source_url // Include source URL in the alert data
       });
       
       showToast({
@@ -70,7 +72,8 @@ export const TestAlertsPage: React.FC = () => {
         title: '',
         message: '',
         severity: 'medium',
-        cfr_references: ''
+        cfr_references: '',
+        source_url: ''
       });
     } catch (error) {
       console.error('Error creating alert:', error);
@@ -170,6 +173,25 @@ export const TestAlertsPage: React.FC = () => {
                 className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 placeholder="e.g., 21 CFR 820.30, 21 CFR 820.40"
               />
+            </div>
+            
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
+                Source URL
+              </label>
+              <div className="flex items-center">
+                <Link className="h-4 w-4 text-slate-400 dark:text-slate-500 mr-2" />
+                <input
+                  type="url"
+                  value={alertForm.source_url}
+                  onChange={(e) => handleInputChange('source_url', e.target.value)}
+                  className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
+                  placeholder="e.g., https://www.fda.gov/medical-devices/guidance-document"
+                />
+              </div>
+              <p className="mt-1 text-xs text-slate-500 dark:text-slate-400">
+                Link to the source document or announcement (optional)
+              </p>
             </div>
             
             <div className="flex justify-end">

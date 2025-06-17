@@ -76,6 +76,7 @@ export interface Alert {
   timestamp: Date;
   isRead: boolean;
   severity: 'low' | 'medium' | 'high';
+  sourceUrl?: string; // Add source URL field
 }
 
 // UI Store Types

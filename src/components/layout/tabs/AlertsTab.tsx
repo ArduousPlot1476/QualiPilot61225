@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AlertTriangle, CheckCircle, Clock, Shield, Bell } from 'lucide-react';
+import { AlertTriangle, CheckCircle, Clock, Shield, Bell, ExternalLink } from 'lucide-react';
 import { useAppStore } from '../../../store/appStore';
 import { EmptyState } from '../../ui/EmptyState';
 import { useAuth } from '../../auth/AuthProvider';
@@ -97,6 +97,42 @@ export const AlertsTab: React.FC = () => {
     }
   };
 
+  // Get alert link based on alert type and content
+  const getAlertLink = (alert: any) => {
+    // Default links based on alert type
+    const defaultLinks = {
+      'regulatory_change': 'https://www.fda.gov/medical-devices/medical-device-safety',
+      'compliance_deadline': 'https://www.fda.gov/medical-devices/how-study-and-market-your-device/device-advice-comprehensive-regulatory-assistance',
+      'guidance_update': 'https://www.fda.gov/medical-devices/device-advice-comprehensive-regulatory-assistance/guidance-documents-medical-devices-and-radiation-emitting-products'
+    };
+
+    // Check if the alert has CFR references
+    if (alert.cfr_references && alert.cfr_references.length > 0) {
+      const cfrRef = alert.cfr_references[0];
+      if (cfrRef.includes('21 CFR 820')) {
+        return 'https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-820';
+      }
+      if (cfrRef.includes('21 CFR 807')) {
+        return 'https://www.ecfr.gov/current/title-21/chapter-I/subchapter-H/part-807';
+      }
+    }
+
+    // Check for specific keywords in the title or message
+    const content = (alert.title + ' ' + alert.message).toLowerCase();
+    if (content.includes('software validation')) {
+      return 'https://www.fda.gov/regulatory-information/search-fda-guidance-documents/general-principles-software-validation';
+    }
+    if (content.includes('510(k)')) {
+      return 'https://www.fda.gov/medical-devices/premarket-submissions/premarket-notification-510k';
+    }
+    if (content.includes('qms') || content.includes('quality management')) {
+      return 'https://www.fda.gov/medical-devices/quality-and-compliance-medical-devices/quality-system-qs-regulationmedical-device-good-manufacturing-practices';
+    }
+
+    // Use default link based on alert type
+    return defaultLinks[alert.alert_type] || 'https://www.fda.gov/medical-devices';
+  };
+
   if (isLoading) {
     return (
       <div className="p-4 space-y-4">
@@ -146,53 +182,69 @@ export const AlertsTab: React.FC = () => {
             description="You're all caught up! Alerts will appear here when there are regulatory updates or compliance issues."
           />
         ) : (
-          alerts.map((alert) => (
-            <div
-              key={alert.id}
-              className={`rounded-lg p-4 border transition-all duration-200 cursor-pointer ${
-                alert.isRead ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700' : getAlertColor(alert.type)
-              }`}
-              onClick={() => !alert.isRead && handleMarkAsRead(alert.id)}
-            >
-              <div className="flex items-start space-x-3">
-                <div className="flex-shrink-0 mt-0.5">
-                  {alert.type === 'warning' ? (
-                    <Clock className="h-4 w-4 text-amber-500 dark:text-amber-400" />
-                  ) : (
-                    getAlertIcon(alert.type)
+          alerts.map((alert) => {
+            const alertLink = getAlertLink(alert);
+            
+            return (
+              <div
+                key={alert.id}
+                className={`rounded-lg p-4 border transition-all duration-200 cursor-pointer ${
+                  alert.isRead ? 'bg-slate-50 dark:bg-slate-800 border-slate-200 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-700' : getAlertColor(alert.type)
+                }`}
+                onClick={() => !alert.isRead && handleMarkAsRead(alert.id)}
+              >
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    {alert.type === 'warning' ? (
+                      <Clock className="h-4 w-4 text-amber-500 dark:text-amber-400" />
+                    ) : (
+                      getAlertIcon(alert.type)
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className={`font-medium text-sm leading-tight ${
+                      alert.isRead ? 'text-slate-700 dark:text-slate-300' : 'text-slate-900 dark:text-white'
+                    }`}>
+                      {alert.title}
+                    </h4>
+                    <p className={`text-xs mt-1 leading-relaxed ${
+                      alert.isRead ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300'
+                    }`}>
+                      {alert.message}
+                    </p>
+                    <div className="flex items-center justify-between mt-3">
+                      <div className="flex items-center text-xs text-slate-500 dark:text-slate-400">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {formatTimestamp(alert.timestamp)}
+                      </div>
+                      <div className="flex items-center space-x-3">
+                        <span className={`text-xs px-2 py-1 rounded-full ${
+                          alert.severity === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
+                          alert.severity === 'medium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
+                          'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
+                        }`}>
+                          {alert.severity}
+                        </span>
+                        <a 
+                          href={alertLink}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          onClick={(e) => e.stopPropagation()}
+                          className="flex items-center text-xs text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300 hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          View Source
+                        </a>
+                      </div>
+                    </div>
+                  </div>
+                  {!alert.isRead && (
+                    <div className="w-2 h-2 bg-teal-500 dark:bg-teal-400 rounded-full flex-shrink-0 mt-2"></div>
                   )}
                 </div>
-                <div className="flex-1 min-w-0">
-                  <h4 className={`font-medium text-sm leading-tight ${
-                    alert.isRead ? 'text-slate-700 dark:text-slate-300' : 'text-slate-900 dark:text-white'
-                  }`}>
-                    {alert.title}
-                  </h4>
-                  <p className={`text-xs mt-1 leading-relaxed ${
-                    alert.isRead ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300'
-                  }`}>
-                    {alert.message}
-                  </p>
-                  <div className="flex items-center justify-between mt-3">
-                    <div className="flex items-center text-xs text-slate-500 dark:text-slate-400">
-                      <Clock className="h-3 w-3 mr-1" />
-                      {formatTimestamp(alert.timestamp)}
-                    </div>
-                    <span className={`text-xs px-2 py-1 rounded-full ${
-                      alert.severity === 'high' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300' :
-                      alert.severity === 'medium' ? 'bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300' :
-                      'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300'
-                    }`}>
-                      {alert.severity}
-                    </span>
-                  </div>
-                </div>
-                {!alert.isRead && (
-                  <div className="w-2 h-2 bg-teal-500 dark:bg-teal-400 rounded-full flex-shrink-0 mt-2"></div>
-                )}
               </div>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
     </div>

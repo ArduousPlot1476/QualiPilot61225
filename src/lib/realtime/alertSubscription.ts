@@ -44,7 +44,8 @@ export const subscribeToAlerts = (userId: string): (() => void) => {
                 message: newRecord.message,
                 timestamp: new Date(newRecord.created_at),
                 isRead: !!newRecord.read_at,
-                severity: newRecord.severity
+                severity: newRecord.severity,
+                sourceUrl: newRecord.source_url // Add source URL to the alert
               };
               
               // Add the alert to the store
@@ -125,7 +126,8 @@ export const fetchInitialAlerts = async (userId: string): Promise<Alert[]> => {
       message: record.message,
       timestamp: new Date(record.created_at),
       isRead: !!record.read_at,
-      severity: record.severity
+      severity: record.severity,
+      sourceUrl: record.source_url // Include source URL in the mapped alert
     }));
   } catch (error) {
     console.error('Error fetching alerts:', error);
@@ -163,6 +165,7 @@ export const createAlertInDB = async (
     message: string;
     severity: 'low' | 'medium' | 'high' | 'critical';
     cfr_references?: string[];
+    source_url?: string; // Add source URL parameter
   }
 ): Promise<void> => {
   try {
