@@ -33,96 +33,106 @@ export class ChatService {
   ): Promise<void> {
     const { onChunk, onComplete, onError, signal, roadmapData } = options;
 
-    try {
-      // Get current session for authentication
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        throw new Error('Authentication required');
-      }
-
-      // Check if thread exists before sending message
-      if (threadId !== '1') { // Skip check for default mock thread
-        const { data: thread, error: threadError } = await supabase
-          .from('threads')
-          .select('id')
-          .eq('id', threadId)
-          .single();
-          
-        if (threadError) {
-          console.error('Thread check error:', threadError);
-          throw new Error('Thread not found or access denied');
-        }
-      }
-
-      const response = await fetch(this.FUNCTION_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          threadId,
-          message,
-          roadmapData, // Include roadmap data in the request
-        }),
-        signal,
-      });
-
-      if (!response.ok) {
-        const errorData = await response.json().catch(() => ({}));
-        throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      if (!response.body) {
-        throw new Error('No response body received');
-      }
-
-      // Process Server-Sent Events stream
-      const reader = response.body.getReader();
-      const decoder = new TextDecoder();
-      let buffer = '';
-
+    // Wrap the entire function in a Promise to ensure it always resolves or rejects
+    return new Promise<void>(async (resolve, reject) => {
       try {
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
+        // Get current session for authentication
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) {
+          throw new Error('Authentication required');
+        }
 
-          buffer += decoder.decode(value, { stream: true });
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+        // Check if thread exists before sending message
+        if (threadId !== '1') { // Skip check for default mock thread
+          const { data: thread, error: threadError } = await supabase
+            .from('threads')
+            .select('id')
+            .eq('id', threadId)
+            .single();
+            
+          if (threadError) {
+            console.error('Thread check error:', threadError);
+            throw new Error('Thread not found or access denied');
+          }
+        }
 
-          for (const line of lines) {
-            if (line.startsWith('data: ')) {
-              try {
-                const data = JSON.parse(line.slice(6));
-                
-                if (data.type === 'content' && onChunk) {
-                  onChunk(data);
-                } else if (data.type === 'complete' && onComplete) {
-                  onComplete(data);
-                } else if (data.type === 'error') {
-                  throw new Error(data.error);
+        const response = await fetch(this.FUNCTION_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            threadId,
+            message,
+            roadmapData, // Include roadmap data in the request
+          }),
+          signal,
+        });
+
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        if (!response.body) {
+          throw new Error('No response body received');
+        }
+
+        // Process Server-Sent Events stream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        try {
+          while (true) {
+            const { done, value } = await reader.read();
+            if (done) break;
+
+            buffer += decoder.decode(value, { stream: true });
+            const lines = buffer.split('\n');
+            buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+            for (const line of lines) {
+              if (line.startsWith('data: ')) {
+                try {
+                  const data = JSON.parse(line.slice(6));
+                  
+                  if (data.type === 'content' && onChunk) {
+                    onChunk(data);
+                  } else if (data.type === 'complete' && onComplete) {
+                    onComplete(data);
+                  } else if (data.type === 'error') {
+                    throw new Error(data.error);
+                  }
+                } catch (parseError) {
+                  console.error('Error parsing SSE data:', parseError);
                 }
-              } catch (parseError) {
-                console.error('Error parsing SSE data:', parseError);
               }
             }
           }
+          
+          // Stream completed successfully
+          resolve();
+        } catch (streamError) {
+          // Handle stream processing errors
+          reject(streamError);
+        } finally {
+          reader.releaseLock();
         }
-      } finally {
-        reader.releaseLock();
-      }
 
-    } catch (error) {
-      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
-      console.error('Chat service error:', errorMessage);
-      
-      if (onError) {
-        onError(errorMessage);
-      } else {
-        throw error;
+      } catch (error) {
+        const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+        console.error('Chat service error:', errorMessage);
+        
+        if (onError) {
+          onError(errorMessage);
+        }
+        
+        // Ensure the promise is rejected with the error
+        reject(error);
       }
-    }
+    });
   }
 
   static async getConversationHistory(threadId: string, limit: number = 50) {
