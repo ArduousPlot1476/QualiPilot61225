@@ -67,7 +67,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
             setStreamingContent(simulatedContent);
           } else {
             clearInterval(interval);
-            setIsStreaming(false);
+            setIsStreaming(false); // Ensure streaming state is reset on completion
             
             if (onMessageComplete) {
               onMessageComplete({
