@@ -145,6 +145,7 @@ export const VirtualMessageList: React.FC<VirtualMessageListProps> = ({
                 style={{
                   top: virtualItem.start,
                   height: virtualItem.size,
+                  zIndex: virtualItem.index, // Add z-index based on message index to prevent overlap
                 }}
               >
                 <TransitionWrapper

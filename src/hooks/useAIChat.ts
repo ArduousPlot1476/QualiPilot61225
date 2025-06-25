@@ -29,6 +29,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
   const { userProfile } = useAuth();
 
   const sendMessage = useCallback(async (message: string, threadId: string) => {
+    // If already streaming, don't allow sending another message
     if (isStreaming) {
       console.warn('Already streaming a message');
       return;
