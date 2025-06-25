@@ -44,60 +44,10 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
     abortControllerRef.current = new AbortController();
 
     try {
-      // For the default mock thread, use a different approach
-      if (threadId === '1') {
-        // Simulate streaming for the mock thread using a Promise
-        await new Promise<void>((resolve, reject) => {
-          let simulatedContent = '';
-          const chunks = [
-            "I'm analyzing your question about FDA regulations. ",
-            "Based on the current FDA guidelines, ",
-            "medical device manufacturers must comply with Quality System Regulations (QSR) as outlined in 21 CFR Part 820. ",
-            "This includes requirements for design controls, document controls, and risk management. ",
-            "For more specific guidance, please provide details about your device classification and intended use."
-          ];
-          
-          let currentIndex = 0;
-          const interval = setInterval(() => {
-            if (currentIndex < chunks.length) {
-              const newChunk = chunks[currentIndex];
-              simulatedContent += newChunk;
-              setStreamingContent(simulatedContent);
-              currentIndex++;
-            } else {
-              clearInterval(interval);
-              
-              // Complete the mock response
-              if (onMessageComplete) {
-                onMessageComplete({
-                  type: 'complete',
-                  content: simulatedContent,
-                  fullContent: simulatedContent,
-                  confidence: 'High',
-                  retrievedDocs: 3
-                });
-              }
-              
-              setIsStreaming(false);
-              resolve(); // Resolve the promise when the mock response is complete
-            }
-          }, 300);
-          
-          // Clean up interval on abort
-          abortControllerRef.current?.signal.addEventListener('abort', () => {
-            clearInterval(interval);
-            setIsStreaming(false);
-            reject(new Error('Mock response aborted')); // Reject the promise on abort
-          });
-        });
-        
-        return;
-      }
-
       // Extract roadmap data from user profile if available
       const roadmapData = userProfile?.company_info?.roadmap_data;
       
-      // For real threads, use the ChatService
+      // Send message to ChatService
       await ChatService.sendMessage(threadId, message, {
         signal: abortControllerRef.current.signal,
         roadmapData, // Pass roadmap data to the chat service

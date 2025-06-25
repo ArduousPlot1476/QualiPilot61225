@@ -35,7 +35,7 @@ export const ChatArea: React.FC = () => {
   const [showHelpTip, setShowHelpTip] = useState(false);
   const { showToast } = useToast();
   const { userProfile } = useAuth();
-
+  
   const selectedThread = conversationThreads.find(t => t.id === selectedThreadId);
   const hasRoadmapData = !!userProfile?.company_info?.roadmap_data;
 
@@ -331,7 +331,7 @@ export const ChatArea: React.FC = () => {
           </div>
         </div>
 
-        {/* Messages - FIXED: Changed overflow-hidden to overflow-auto */}
+        {/* Messages */}
         <div className="flex-1 overflow-auto relative">
           <ErrorBoundary
             fallback={
