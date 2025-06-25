@@ -14,9 +14,9 @@ import { TransitionWrapper } from '../ui/TransitionWrapper';
 import { UploadedFile } from '../ui/FileUploader';
 import { useAuth } from '../auth/AuthProvider';
 
-// Lazy load the VirtualMessageList component
-const VirtualMessageList = lazy(() => 
-  import('../chat/VirtualMessageList').then(module => ({ default: module.VirtualMessageList }))
+// Lazy load the MessageList component
+const MessageList = lazy(() => 
+  import('../chat/MessageList').then(module => ({ default: module.MessageList }))
 );
 
 export const ChatArea: React.FC = () => {
@@ -39,7 +39,7 @@ export const ChatArea: React.FC = () => {
   const selectedThread = conversationThreads.find(t => t.id === selectedThreadId);
   const hasRoadmapData = !!userProfile?.company_info?.roadmap_data;
 
-  // AI Chat integration - no longer pass threadId as prop
+  // AI Chat integration
   const { 
     isStreaming, 
     streamingContent, 
@@ -331,7 +331,7 @@ export const ChatArea: React.FC = () => {
           </div>
         </div>
 
-        {/* Messages */}
+        {/* Messages - FIXED: Changed overflow-hidden to overflow-auto */}
         <div className="flex-1 overflow-auto relative">
           <ErrorBoundary
             fallback={
@@ -347,10 +347,9 @@ export const ChatArea: React.FC = () => {
             }
           >
             <Suspense fallback={<MessageListSkeleton />}>
-              <VirtualMessageList 
+              <MessageList 
                 messages={chatMessages} 
                 loading={isCreatingThread} 
-                onLoadMore={() => console.log('Load more messages')}
               />
             </Suspense>
           </ErrorBoundary>

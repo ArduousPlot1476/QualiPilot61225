@@ -12,9 +12,9 @@ import { ContextualHelp } from '../ui/ContextualHelp';
 import { ErrorBoundary } from '../ui/ErrorBoundary';
 import { TransitionWrapper } from '../ui/TransitionWrapper';
 
-// Lazy load the VirtualMessageList component
-const VirtualMessageList = lazy(() => 
-  import('../chat/VirtualMessageList').then(module => ({ default: module.VirtualMessageList }))
+// Lazy load the MessageList component
+const MessageList = lazy(() => 
+  import('../chat/MessageList').then(module => ({ default: module.MessageList }))
 );
 
 export const ChatArea: React.FC = () => {
@@ -33,7 +33,7 @@ export const ChatArea: React.FC = () => {
 
   const selectedThread = conversationThreads.find(t => t.id === selectedThreadId);
 
-  // AI Chat integration - no longer pass threadId as prop
+  // AI Chat integration
   const { 
     isStreaming, 
     streamingContent, 
@@ -148,19 +148,19 @@ export const ChatArea: React.FC = () => {
 
   return (
     <ErrorBoundary>
-      <div className="flex-1 flex flex-col bg-slate-50 relative">
+      <div className="flex-1 flex flex-col bg-slate-50 dark:bg-slate-900 relative">
         {/* Header */}
-        <div className="bg-white border-b border-slate-200 px-6 py-4 shadow-sm animate-fade-in">
+        <div className="bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 px-6 py-4 shadow-sm animate-fade-in">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              <div className="bg-teal-600 rounded-full p-2 hover-scale transition-transform-150">
+              <div className="bg-teal-600 dark:bg-teal-700 rounded-full p-2 hover-scale transition-transform-150">
                 <Bot className="h-5 w-5 text-white" />
               </div>
               <div>
-                <h2 className="text-lg font-semibold text-slate-900">
+                <h2 className="text-lg font-semibold text-slate-900 dark:text-white">
                   {selectedThread?.title || 'QualiPilot Assistant'}
                 </h2>
-                <p className="text-sm text-slate-500">
+                <p className="text-sm text-slate-500 dark:text-slate-400">
                   Medical Device Regulatory Expert • AI-Powered Compliance Assistant
                 </p>
               </div>
@@ -177,9 +177,9 @@ export const ChatArea: React.FC = () => {
                 leaveFrom="opacity-100 scale-100"
                 leaveTo="opacity-0 scale-95"
               >
-                <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-full">
-                  <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
-                  <span className="text-xs font-medium text-blue-700">AI Responding</span>
+                <div className="flex items-center space-x-2 px-3 py-1 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-full">
+                  <div className="w-2 h-2 bg-blue-500 dark:bg-blue-400 rounded-full animate-pulse"></div>
+                  <span className="text-xs font-medium text-blue-700 dark:text-blue-300">AI Responding</span>
                 </div>
               </TransitionWrapper>
               
@@ -199,7 +199,7 @@ export const ChatArea: React.FC = () => {
               >
                 <button
                   onClick={toggleContextDrawer}
-                  className="px-4 py-2 text-sm font-medium text-teal-600 bg-teal-50 rounded-lg hover:bg-teal-100 transition-colors duration-200 focus-ring hover-scale"
+                  className="px-4 py-2 text-sm font-medium text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30 rounded-lg hover:bg-teal-100 dark:hover:bg-teal-800/30 transition-colors duration-200 focus-ring hover-scale"
                 >
                   View Context
                 </button>
@@ -208,15 +208,15 @@ export const ChatArea: React.FC = () => {
           </div>
         </div>
 
-        {/* Messages */}
-        <div className="flex-1 overflow-hidden relative">
+        {/* Messages - FIXED: Changed overflow-hidden to overflow-auto */}
+        <div className="flex-1 overflow-auto relative">
           <ErrorBoundary
             fallback={
               <div className="p-6 text-center">
-                <p className="text-red-600">There was an error loading messages.</p>
+                <p className="text-red-600 dark:text-red-400">There was an error loading messages.</p>
                 <button 
                   onClick={() => window.location.reload()} 
-                  className="mt-2 px-4 py-2 bg-teal-600 text-white rounded-lg"
+                  className="mt-2 px-4 py-2 bg-teal-600 dark:bg-teal-700 text-white rounded-lg"
                 >
                   Reload
                 </button>
@@ -224,10 +224,9 @@ export const ChatArea: React.FC = () => {
             }
           >
             <Suspense fallback={<MessageListSkeleton />}>
-              <VirtualMessageList 
+              <MessageList 
                 messages={chatMessages} 
                 loading={isCreatingThread} 
-                onLoadMore={() => console.log('Load more messages')}
               />
             </Suspense>
           </ErrorBoundary>
@@ -261,17 +260,17 @@ export const ChatArea: React.FC = () => {
             leaveFrom="opacity-100"
             leaveTo="opacity-0"
           >
-            <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 bg-teal-50 border border-teal-200 rounded-lg p-4 shadow-lg max-w-md">
+            <div className="absolute bottom-32 left-1/2 transform -translate-x-1/2 bg-teal-50 dark:bg-teal-900/30 border border-teal-200 dark:border-teal-800 rounded-lg p-4 shadow-lg max-w-md">
               <div className="flex items-start space-x-3">
-                <Info className="h-5 w-5 text-teal-600 mt-0.5" />
+                <Info className="h-5 w-5 text-teal-600 dark:text-teal-400 mt-0.5" />
                 <div>
-                  <h4 className="font-medium text-teal-900 mb-1">Ask me anything about FDA regulations</h4>
-                  <p className="text-sm text-teal-700">
+                  <h4 className="font-medium text-teal-900 dark:text-teal-100 mb-1">Ask me anything about FDA regulations</h4>
+                  <p className="text-sm text-teal-700 dark:text-teal-300">
                     I can help with device classification, 510(k) requirements, QMS documentation, and more.
                   </p>
                   <button 
                     onClick={() => setShowHelpTip(false)}
-                    className="text-xs text-teal-600 hover:text-teal-800 mt-2 underline"
+                    className="text-xs text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-200 mt-2 underline"
                   >
                     Dismiss
                   </button>
@@ -321,12 +320,12 @@ export const ChatArea: React.FC = () => {
           leaveFrom="opacity-100"
           leaveTo="opacity-0"
         >
-          <div className="px-6 py-3 bg-red-50 border-t border-red-200">
+          <div className="px-6 py-3 bg-red-50 dark:bg-red-900/30 border-t border-red-200 dark:border-red-800">
             <div className="flex items-center justify-between">
-              <p className="text-sm text-red-700">{aiError}</p>
+              <p className="text-sm text-red-700 dark:text-red-300">{aiError}</p>
               <button
                 onClick={clearAIError}
-                className="text-sm text-red-600 hover:text-red-800 font-medium focus-ring rounded-lg px-2 py-1"
+                className="text-sm text-red-600 dark:text-red-400 hover:text-red-800 dark:hover:text-red-200 font-medium focus-ring rounded-lg px-2 py-1"
               >
                 Dismiss
               </button>
