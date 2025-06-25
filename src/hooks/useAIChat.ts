@@ -29,7 +29,6 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
   const { userProfile } = useAuth();
 
   const sendMessage = useCallback(async (message: string, threadId: string) => {
-    // If already streaming, don't allow sending another message
     if (isStreaming) {
       console.warn('Already streaming a message');
       return;
@@ -47,9 +46,9 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
     try {
       // For the default mock thread, use a different approach
       if (threadId === '1') {
-        // Simulate streaming for the mock thread
-        let simulatedContent = '';
-        const interval = setInterval(() => {
+        // Simulate streaming for the mock thread using a Promise
+        await new Promise<void>((resolve, reject) => {
+          let simulatedContent = '';
           const chunks = [
             "I'm analyzing your question about FDA regulations. ",
             "Based on the current FDA guidelines, ",
@@ -58,33 +57,38 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
             "For more specific guidance, please provide details about your device classification and intended use."
           ];
           
-          const currentIndex = simulatedContent.length > 0 ? 
-            Math.floor(simulatedContent.length / 20) % chunks.length : 0;
-            
-          if (currentIndex < chunks.length) {
-            const newChunk = chunks[currentIndex];
-            simulatedContent += newChunk;
-            setStreamingContent(simulatedContent);
-          } else {
-            clearInterval(interval);
-            setIsStreaming(false); // Ensure streaming state is reset on completion
-            
-            if (onMessageComplete) {
-              onMessageComplete({
-                type: 'complete',
-                content: simulatedContent,
-                fullContent: simulatedContent,
-                confidence: 'High',
-                retrievedDocs: 3
-              });
+          let currentIndex = 0;
+          const interval = setInterval(() => {
+            if (currentIndex < chunks.length) {
+              const newChunk = chunks[currentIndex];
+              simulatedContent += newChunk;
+              setStreamingContent(simulatedContent);
+              currentIndex++;
+            } else {
+              clearInterval(interval);
+              
+              // Complete the mock response
+              if (onMessageComplete) {
+                onMessageComplete({
+                  type: 'complete',
+                  content: simulatedContent,
+                  fullContent: simulatedContent,
+                  confidence: 'High',
+                  retrievedDocs: 3
+                });
+              }
+              
+              setIsStreaming(false);
+              resolve(); // Resolve the promise when the mock response is complete
             }
-          }
-        }, 300);
-        
-        // Clean up interval on abort
-        abortControllerRef.current.signal.addEventListener('abort', () => {
-          clearInterval(interval);
-          setIsStreaming(false); // Ensure streaming state is reset on abort
+          }, 300);
+          
+          // Clean up interval on abort
+          abortControllerRef.current?.signal.addEventListener('abort', () => {
+            clearInterval(interval);
+            setIsStreaming(false);
+            reject(new Error('Mock response aborted')); // Reject the promise on abort
+          });
         });
         
         return;
@@ -105,7 +109,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
         },
 
         onComplete: (response: ChatStreamResponse) => {
-          setIsStreaming(false); // Ensure streaming state is reset on completion
+          setIsStreaming(false);
           setStreamingContent('');
           setConfidence(response.confidence || null);
           setRetrievedDocs(response.retrievedDocs || 0);
@@ -128,7 +132,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
         },
 
         onError: (errorMessage: string) => {
-          setIsStreaming(false); // Ensure streaming state is reset on error
+          setIsStreaming(false);
           setStreamingContent('');
           setError(errorMessage);
           
@@ -143,7 +147,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setIsStreaming(false); // Ensure streaming state is reset on exception
+      setIsStreaming(false);
       setStreamingContent('');
       setError(errorMessage);
 
@@ -157,7 +161,6 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
       }
     } finally {
       abortControllerRef.current = null;
-      setIsStreaming(false); // Final safety check to ensure streaming state is reset
     }
   }, [isStreaming, onMessageComplete, showToast, userProfile]);
 
