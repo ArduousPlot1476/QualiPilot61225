@@ -332,7 +332,7 @@ export const ChatArea: React.FC = () => {
         </div>
 
         {/* Messages */}
-        <div className="flex-1 overflow-hidden relative">
+        <div className="flex-1 overflow-auto relative">
           <ErrorBoundary
             fallback={
               <div className="p-6 text-center">
