@@ -84,6 +84,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
         // Clean up interval on abort
         abortControllerRef.current.signal.addEventListener('abort', () => {
           clearInterval(interval);
+          setIsStreaming(false); // Ensure streaming state is reset on abort
         });
         
         return;
@@ -104,7 +105,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
         },
 
         onComplete: (response: ChatStreamResponse) => {
-          setIsStreaming(false);
+          setIsStreaming(false); // Ensure streaming state is reset on completion
           setStreamingContent('');
           setConfidence(response.confidence || null);
           setRetrievedDocs(response.retrievedDocs || 0);
@@ -127,7 +128,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
         },
 
         onError: (errorMessage: string) => {
-          setIsStreaming(false);
+          setIsStreaming(false); // Ensure streaming state is reset on error
           setStreamingContent('');
           setError(errorMessage);
           
@@ -142,7 +143,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
 
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
-      setIsStreaming(false);
+      setIsStreaming(false); // Ensure streaming state is reset on exception
       setStreamingContent('');
       setError(errorMessage);
 
@@ -156,6 +157,7 @@ export const useAIChat = ({ onMessageComplete }: UseAIChatOptions): UseAIChatRet
       }
     } finally {
       abortControllerRef.current = null;
+      setIsStreaming(false); // Final safety check to ensure streaming state is reset
     }
   }, [isStreaming, onMessageComplete, showToast, userProfile]);
 
